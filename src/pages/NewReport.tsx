@@ -9,7 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { REPORT_CATEGORIES, MAJOR_CITIES, COMMON_NEIGHBORHOODS, ReportCategory } from '@/data/burkinaFaso';
+import { REPORT_CATEGORIES, MAJOR_CITIES, ReportCategory } from '@/data/burkinaFaso';
+import { getAllCities } from '@/data/locations';
+import LocationPicker from '@/components/LocationPicker';
 import { 
   ArrowLeft, 
   Camera, 
@@ -34,8 +36,7 @@ const NewReport: React.FC = () => {
   const [useManualCity, setUseManualCity] = useState(false);
   const [manualCity, setManualCity] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
-  const [useManualNeighborhood, setUseManualNeighborhood] = useState(false);
-  const [manualNeighborhood, setManualNeighborhood] = useState('');
+  const [selectedSector, setSelectedSector] = useState('');
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState<string>('');
   const [latitude, setLatitude] = useState<number | undefined>();
@@ -95,9 +96,8 @@ const NewReport: React.FC = () => {
     e.preventDefault();
 
     const selectedCity = useManualCity ? manualCity : city;
-    const selectedNeighborhood = useManualNeighborhood ? manualNeighborhood : neighborhood;
 
-    if (!category || !subcategory || !selectedCity || !selectedNeighborhood || !photo) {
+    if (!category || !subcategory || !selectedCity || !neighborhood || !photo) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires et ajouter une photo",
@@ -114,7 +114,7 @@ const NewReport: React.FC = () => {
         category: category as ReportCategory,
         subcategory,
         city: selectedCity,
-        neighborhood: selectedNeighborhood,
+        neighborhood,
         description,
         photo,
         latitude,
@@ -272,35 +272,25 @@ const NewReport: React.FC = () => {
                 )}
               </div>
 
-              {/* Neighborhood */}
+              {/* Neighborhood - Hierarchical Picker */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Quartier</Label>
-                  <button
-                    type="button"
-                    className="text-xs text-primary hover:underline"
-                    onClick={() => setUseManualNeighborhood(!useManualNeighborhood)}
-                  >
-                    {useManualNeighborhood ? 'Choisir dans la liste' : 'Saisir manuellement'}
-                  </button>
-                </div>
-                {useManualNeighborhood ? (
-                  <Input
-                    placeholder="Entrez le quartier"
-                    value={manualNeighborhood}
-                    onChange={(e) => setManualNeighborhood(e.target.value)}
-                  />
-                ) : (
-                  <Select value={neighborhood} onValueChange={setNeighborhood}>
-                    <SelectTrigger className="bg-card">
-                      <SelectValue placeholder="Sélectionnez le quartier" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {COMMON_NEIGHBORHOODS.map((n) => (
-                        <SelectItem key={n} value={n}>{n}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <Label>Quartier (Ville → Secteur → Quartier)</Label>
+                <LocationPicker
+                  value={neighborhood}
+                  city={useManualCity ? manualCity : city}
+                  onSelect={(location) => {
+                    if (!useManualCity) {
+                      setCity(location.city);
+                    }
+                    setSelectedSector(location.sector);
+                    setNeighborhood(location.neighborhood);
+                  }}
+                  placeholder="Sélectionnez le quartier..."
+                />
+                {neighborhood && selectedSector && (
+                  <p className="text-xs text-muted-foreground">
+                    📍 {city || manualCity} → {selectedSector} → <span className="font-medium text-foreground">{neighborhood}</span>
+                  </p>
                 )}
               </div>
 
