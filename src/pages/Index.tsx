@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { REPORT_CATEGORIES } from '@/data/burkinaFaso';
 import { ArrowRight, Shield, MapPin, Phone, Users } from 'lucide-react';
-import logo from '@/assets/logo.png';
+const logo = '/logo.png';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
