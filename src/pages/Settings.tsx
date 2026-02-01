@@ -19,7 +19,7 @@ import {
   Key,
   Globe
 } from 'lucide-react';
-import logo from '@/assets/logo.png';
+const logo = '/logo.png';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();

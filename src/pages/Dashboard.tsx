@@ -16,7 +16,7 @@ import {
   Clock,
   Phone
 } from 'lucide-react';
-import logo from '@/assets/logo.png';
+const logo = '/logo.png';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();

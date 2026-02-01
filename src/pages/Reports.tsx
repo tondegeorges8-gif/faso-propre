@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { REPORT_CATEGORIES, REPORT_STATUSES } from '@/data/burkinaFaso';
 import { ArrowLeft, MapPin, Calendar, Plus } from 'lucide-react';
-import logo from '@/assets/logo.png';
+const logo = '/logo.png';
 
 const Reports: React.FC = () => {
   const navigate = useNavigate();

@@ -21,7 +21,7 @@ import {
   Phone,
   Loader2
 } from 'lucide-react';
-import logo from '@/assets/logo.png';
+const logo = '/logo.png';
 
 const NewReport: React.FC = () => {
   const navigate = useNavigate();
