@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReports } from '@/contexts/ReportsContext';
@@ -9,9 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { REPORT_CATEGORIES, MAJOR_CITIES, ReportCategory } from '@/data/burkinaFaso';
-import { getAllCities } from '@/data/locations';
-import LocationPicker from '@/components/LocationPicker';
+import { REPORT_CATEGORIES, ReportCategory } from '@/data/burkinaFaso';
+import HierarchicalLocationPicker, { LocationSelection } from '@/components/location/HierarchicalLocationPicker';
+import OnboardingGuide from '@/components/onboarding/OnboardingGuide';
 import { 
   ArrowLeft, 
   Camera, 
@@ -19,7 +19,8 @@ import {
   Navigation, 
   Send,
   Phone,
-  Loader2
+  Loader2,
+  HelpCircle
 } from 'lucide-react';
 const logo = '/logo.png';
 
@@ -32,17 +33,22 @@ const NewReport: React.FC = () => {
 
   const [category, setCategory] = useState<ReportCategory | ''>('');
   const [subcategory, setSubcategory] = useState('');
-  const [city, setCity] = useState(user?.city || '');
-  const [useManualCity, setUseManualCity] = useState(false);
-  const [manualCity, setManualCity] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
-  const [selectedSector, setSelectedSector] = useState('');
+  const [location, setLocation] = useState<LocationSelection | undefined>();
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState<string>('');
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    // Vérifier si l'utilisateur a déjà vu le guide
+    const onboardingComplete = localStorage.getItem('faso-propre-onboarding-complete');
+    if (!onboardingComplete) {
+      setShowOnboarding(true);
+    }
+  }, []);
 
   if (!user) {
     navigate('/auth');
@@ -95,9 +101,7 @@ const NewReport: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const selectedCity = useManualCity ? manualCity : city;
-
-    if (!category || !subcategory || !selectedCity || !neighborhood || !photo) {
+    if (!category || !subcategory || !location || !photo) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires et ajouter une photo",
@@ -109,12 +113,17 @@ const NewReport: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      // Construire la chaîne de localisation complète
+      const locationParts = [location.city];
+      if (location.arrondissement) locationParts.push(location.arrondissement);
+      locationParts.push(location.sector, location.quarter, location.subQuarter);
+
       addReport({
         userId: user.id,
         category: category as ReportCategory,
         subcategory,
-        city: selectedCity,
-        neighborhood,
+        city: location.city,
+        neighborhood: locationParts.slice(1).join(' → '), // Tout sauf la ville
         description,
         photo,
         latitude,
@@ -140,26 +149,58 @@ const NewReport: React.FC = () => {
 
   const selectedCategory = category ? REPORT_CATEGORIES[category] : null;
 
+  // Construire l'affichage de la localisation
+  const locationDisplay = location ? (
+    <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted/50 rounded-lg">
+      <p className="font-medium text-foreground mb-1">📍 Localisation sélectionnée :</p>
+      <div className="space-y-0.5">
+        <p>🏙️ Ville : <span className="text-foreground">{location.city}</span></p>
+        {location.arrondissement && (
+          <p>🏛️ Arrondissement : <span className="text-foreground">{location.arrondissement}</span></p>
+        )}
+        <p>📍 Secteur : <span className="text-foreground">{location.sector}</span></p>
+        <p>🏘️ Quartier : <span className="text-foreground">{location.quarter}</span></p>
+        <p>📌 Sous-quartier : <span className="text-foreground font-medium">{location.subQuarter}</span></p>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Onboarding Guide */}
+      <OnboardingGuide 
+        open={showOnboarding} 
+        onOpenChange={setShowOnboarding}
+      />
+
       {/* Header */}
       <header className="gradient-hero text-primary-foreground shadow-lg">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary-foreground hover:bg-primary-foreground/10"
+                onClick={() => navigate('/dashboard')}
+              >
+                <ArrowLeft size={20} />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-card overflow-hidden">
+                  <img src={logo} alt="Faso Propre" className="w-full h-full object-cover" />
+                </div>
+                <h1 className="text-lg font-bold">Nouveau signalement</h1>
+              </div>
+            </div>
             <Button
               variant="ghost"
               size="icon"
               className="text-primary-foreground hover:bg-primary-foreground/10"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => setShowOnboarding(true)}
             >
-              <ArrowLeft size={20} />
+              <HelpCircle size={20} />
             </Button>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-card overflow-hidden">
-                <img src={logo} alt="Faso Propre" className="w-full h-full object-cover" />
-              </div>
-              <h1 className="text-lg font-bold">Nouveau signalement</h1>
-            </div>
           </div>
         </div>
       </header>
@@ -231,68 +272,25 @@ const NewReport: React.FC = () => {
             </Card>
           )}
 
-          {/* Location */}
+          {/* Location - Hierarchical Picker */}
           <Card className="shadow-card">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <MapPin size={20} />
-                Localisation *
+                Localisation précise *
               </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                Ville → Arrondissement → Secteur → Quartier → Sous-quartier
+              </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* City */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Ville</Label>
-                  <button
-                    type="button"
-                    className="text-xs text-primary hover:underline"
-                    onClick={() => setUseManualCity(!useManualCity)}
-                  >
-                    {useManualCity ? 'Choisir dans la liste' : 'Saisir manuellement'}
-                  </button>
-                </div>
-                {useManualCity ? (
-                  <Input
-                    placeholder="Entrez la ville"
-                    value={manualCity}
-                    onChange={(e) => setManualCity(e.target.value)}
-                  />
-                ) : (
-                  <Select value={city} onValueChange={setCity}>
-                    <SelectTrigger className="bg-card">
-                      <SelectValue placeholder="Sélectionnez la ville" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover max-h-60">
-                      {MAJOR_CITIES.map((c) => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-
-              {/* Neighborhood - Hierarchical Picker */}
-              <div className="space-y-2">
-                <Label>Quartier (Ville → Secteur → Quartier)</Label>
-                <LocationPicker
-                  value={neighborhood}
-                  city={useManualCity ? manualCity : city}
-                  onSelect={(location) => {
-                    if (!useManualCity) {
-                      setCity(location.city);
-                    }
-                    setSelectedSector(location.sector);
-                    setNeighborhood(location.neighborhood);
-                  }}
-                  placeholder="Sélectionnez le quartier..."
-                />
-                {neighborhood && selectedSector && (
-                  <p className="text-xs text-muted-foreground">
-                    📍 {city || manualCity} → {selectedSector} → <span className="font-medium text-foreground">{neighborhood}</span>
-                  </p>
-                )}
-              </div>
+              <HierarchicalLocationPicker
+                value={location}
+                onSelect={setLocation}
+                placeholder="Sélectionnez votre localisation..."
+              />
+              
+              {locationDisplay}
 
               {/* GPS */}
               <Button
