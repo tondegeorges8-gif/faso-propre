@@ -14,16 +14,141 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          nom: string
+          prenoms: string
+          telephone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          nom: string
+          prenoms: string
+          telephone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          nom?: string
+          prenoms?: string
+          telephone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      signalements: {
+        Row: {
+          arrondissement: string | null
+          category: string
+          commission_montant: number | null
+          created_at: string
+          description: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          montant_total: number | null
+          nom_complet: string
+          photo_url: string | null
+          quartier: string | null
+          secteur: string | null
+          sous_quartier: string | null
+          status: string
+          statut_paiement: string
+          subcategory: string
+          updated_at: string
+          user_id: string
+          ville: string
+        }
+        Insert: {
+          arrondissement?: string | null
+          category: string
+          commission_montant?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          montant_total?: number | null
+          nom_complet: string
+          photo_url?: string | null
+          quartier?: string | null
+          secteur?: string | null
+          sous_quartier?: string | null
+          status?: string
+          statut_paiement?: string
+          subcategory: string
+          updated_at?: string
+          user_id: string
+          ville: string
+        }
+        Update: {
+          arrondissement?: string | null
+          category?: string
+          commission_montant?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          montant_total?: number | null
+          nom_complet?: string
+          photo_url?: string | null
+          quartier?: string | null
+          secteur?: string | null
+          sous_quartier?: string | null
+          status?: string
+          statut_paiement?: string
+          subcategory?: string
+          updated_at?: string
+          user_id?: string
+          ville?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "collector" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +275,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "collector", "admin"],
+    },
   },
 } as const

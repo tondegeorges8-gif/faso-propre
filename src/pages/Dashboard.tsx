@@ -1,57 +1,89 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useReports, Report } from '@/contexts/ReportsContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { REPORT_CATEGORIES, REPORT_STATUSES } from '@/data/burkinaFaso';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Plus, 
   Settings, 
   LogOut, 
-  Camera,
   MapPin,
   Clock,
-  Phone
+  Phone,
+  Truck,
+  CreditCard
 } from 'lucide-react';
+
 const logo = '/logo.png';
+
+interface Signalement {
+  id: string;
+  category: string;
+  subcategory: string;
+  ville: string;
+  quartier: string | null;
+  photo_url: string | null;
+  status: string;
+  statut_paiement: string;
+  montant_total: number;
+  created_at: string;
+}
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, updateProfilePhoto, logout } = useAuth();
-  const { userReports } = useReports();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const { user, profile, logout, isAuthenticated, isLoading } = useAuth();
+  const [userSignalements, setUserSignalements] = useState<Signalement[]>([]);
+  const [loadingSignalements, setLoadingSignalements] = useState(true);
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate('/auth');
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  useEffect(() => {
+    if (user) {
+      fetchUserSignalements();
+    }
+  }, [user]);
 
-    setIsUploadingPhoto(true);
+  const fetchUserSignalements = async () => {
+    if (!user) return;
     
-    // Convert to base64 for local storage
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      updateProfilePhoto(reader.result as string);
-      setIsUploadingPhoto(false);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const { data, error } = await supabase
+        .from('signalements')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUserSignalements((data || []) as Signalement[]);
+    } catch (error) {
+      console.error('Error fetching signalements:', error);
+    } finally {
+      setLoadingSignalements(false);
+    }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
-  const getStatusBadge = (status: keyof typeof REPORT_STATUSES) => {
-    const statusInfo = REPORT_STATUSES[status];
+  const handlePayment = (signalementId: string, amount: number) => {
+    // Placeholder for Orange Money / Moov Money integration
+    alert(`Paiement de ${amount} FCFA via Orange Money / Moov Money\n\nCette fonctionnalité sera bientôt disponible.`);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusInfo = REPORT_STATUSES[status as keyof typeof REPORT_STATUSES];
+    if (!statusInfo) return null;
+    
     return (
       <Badge 
         variant="outline" 
@@ -68,11 +100,29 @@ const Dashboard: React.FC = () => {
   };
 
   const stats = {
-    total: userReports.length,
-    pending: userReports.filter(r => r.status === 'PENDING').length,
-    inProgress: userReports.filter(r => r.status === 'IN_PROGRESS').length,
-    resolved: userReports.filter(r => r.status === 'RESOLVED').length,
+    total: userSignalements.length,
+    pending: userSignalements.filter(r => r.status === 'PENDING').length,
+    inProgress: userSignalements.filter(r => r.status === 'IN_PROGRESS').length,
+    resolved: userSignalements.filter(r => r.status === 'RESOLVED').length,
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Chargement du profil...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -113,37 +163,20 @@ const Dashboard: React.FC = () => {
         <Card className="shadow-card animate-slide-up">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <Avatar className="w-20 h-20 border-4 border-primary/20">
-                  <AvatarImage src={user.profilePhoto} alt={user.firstName} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                    {user.firstName[0]}{user.lastName[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <button
-                  className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-secondary flex items-center justify-center shadow-md hover:bg-secondary/80 transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploadingPhoto}
-                >
-                  <Camera size={14} className="text-secondary-foreground" />
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handlePhotoUpload}
-                />
-              </div>
+              <Avatar className="w-20 h-20 border-4 border-primary/20">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                  {profile.prenoms[0]}{profile.nom[0]}
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <h2 className="text-xl font-semibold">
-                  {user.firstName} {user.lastName}
+                  {profile.prenoms} {profile.nom}
                 </h2>
                 <p className="text-muted-foreground flex items-center gap-1">
-                  <MapPin size={14} />
-                  {user.city}
+                  <Phone size={14} />
+                  {profile.telephone}
                 </p>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
+                <p className="text-sm text-muted-foreground">{profile.email}</p>
               </div>
             </div>
           </CardContent>
@@ -201,6 +234,23 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
 
+        {/* Collector Access */}
+        <Card className="shadow-card border-secondary/50">
+          <CardContent className="pt-4 pb-4">
+            <Button
+              variant="outline"
+              className="w-full h-auto py-4 border-secondary text-secondary-foreground hover:bg-secondary/10"
+              onClick={() => navigate('/collector')}
+            >
+              <Truck size={24} className="mr-2" />
+              <div className="text-left">
+                <p className="font-medium">Espace Prestataire</p>
+                <p className="text-xs opacity-70">Gérer les missions de collecte</p>
+              </div>
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Emergency Contacts */}
         <Card className="shadow-card">
           <CardHeader className="pb-2">
@@ -232,22 +282,22 @@ const Dashboard: React.FC = () => {
         </Card>
 
         {/* Recent Reports */}
-        {userReports.length > 0 && (
+        {userSignalements.length > 0 && (
           <Card className="shadow-card">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Signalements récents</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {userReports.slice(0, 3).map((report) => {
-                const category = REPORT_CATEGORIES[report.category];
+              {userSignalements.slice(0, 3).map((report) => {
+                const category = REPORT_CATEGORIES[report.category as keyof typeof REPORT_CATEGORIES];
                 return (
                   <div 
                     key={report.id}
                     className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
                   >
-                    {report.photo && (
+                    {report.photo_url && (
                       <img 
-                        src={report.photo} 
+                        src={report.photo_url} 
                         alt="Report" 
                         className="w-12 h-12 rounded-lg object-cover"
                       />
@@ -257,10 +307,23 @@ const Dashboard: React.FC = () => {
                         {category?.icon} {report.subcategory}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">
-                        {report.city}, {report.neighborhood}
+                        {report.ville}{report.quartier ? `, ${report.quartier}` : ''}
                       </p>
                     </div>
-                    {getStatusBadge(report.status)}
+                    <div className="flex flex-col items-end gap-1">
+                      {getStatusBadge(report.status)}
+                      {report.statut_paiement === 'en_attente' && report.montant_total > 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs h-7 border-primary text-primary"
+                          onClick={() => handlePayment(report.id, report.montant_total)}
+                        >
+                          <CreditCard size={12} className="mr-1" />
+                          Payer
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 );
               })}

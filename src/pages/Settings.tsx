@@ -1,127 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  ArrowLeft, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  Shield, 
-  BookOpen, 
+  ArrowLeft,
+  User,
+  Phone,
+  Mail,
+  Save,
   LogOut,
-  Smartphone,
-  Key,
-  Globe
+  Shield
 } from 'lucide-react';
+
 const logo = '/logo.png';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { profile, updateProfile, logout, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  
+  const [nom, setNom] = useState('');
+  const [prenoms, setPrenoms] = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-
-  // Security settings (simulated)
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
-
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (newPassword !== confirmPassword) {
-      toast({
-        title: "Erreur",
-        description: "Les mots de passe ne correspondent pas",
-        variant: "destructive"
-      });
-      return;
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/auth');
     }
+  }, [isAuthenticated, authLoading, navigate]);
 
-    if (newPassword.length < 6) {
-      toast({
-        title: "Erreur",
-        description: "Le nouveau mot de passe doit contenir au moins 6 caractères",
-        variant: "destructive"
-      });
-      return;
+  useEffect(() => {
+    if (profile) {
+      setNom(profile.nom);
+      setPrenoms(profile.prenoms);
+      setTelephone(profile.telephone);
     }
+  }, [profile]);
 
-    setIsChangingPassword(true);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const success = await updateProfile({
+        nom: nom.trim(),
+        prenoms: prenoms.trim(),
+        telephone: telephone.trim(),
+      });
 
-    // Simulate password change
-    setTimeout(() => {
-      const savedUsers = JSON.parse(localStorage.getItem('faso_propre_users') || '[]');
-      const userIndex = savedUsers.findIndex((u: any) => u.id === user.id);
-      
-      if (userIndex !== -1 && savedUsers[userIndex].password === currentPassword) {
-        savedUsers[userIndex].password = newPassword;
-        localStorage.setItem('faso_propre_users', JSON.stringify(savedUsers));
-        
+      if (success) {
         toast({
-          title: "Succès",
-          description: "Votre mot de passe a été modifié"
+          title: 'Profil mis à jour',
+          description: 'Vos informations ont été enregistrées',
         });
-        
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
       } else {
         toast({
-          title: "Erreur",
-          description: "Le mot de passe actuel est incorrect",
-          variant: "destructive"
+          title: 'Erreur',
+          description: 'Impossible de mettre à jour le profil',
+          variant: 'destructive',
         });
       }
-      
-      setIsChangingPassword(false);
-    }, 1000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
-  const showTutorial = () => {
-    toast({
-      title: "Tutoriel",
-      description: "Le tutoriel sera disponible dans une prochaine mise à jour"
-    });
-  };
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background pb-6">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="gradient-hero text-primary-foreground shadow-lg">
+      <header className="gradient-hero text-primary-foreground shadow-lg sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
+            <Button 
+              variant="ghost" 
               size="icon"
               className="text-primary-foreground hover:bg-primary-foreground/10"
               onClick={() => navigate('/dashboard')}
             >
               <ArrowLeft size={20} />
             </Button>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-card overflow-hidden">
                 <img src={logo} alt="Faso Propre" className="w-full h-full object-cover" />
               </div>
@@ -131,179 +105,147 @@ const Settings: React.FC = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Change Password */}
+      <main className="container mx-auto px-4 py-6 space-y-6 max-w-lg">
+        {/* Profile Settings */}
         <Card className="shadow-card">
-          <CardHeader className="pb-2">
+          <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Lock size={20} />
-              Changer le mot de passe
+              <User size={20} className="text-primary" />
+              Informations personnelles
             </CardTitle>
+            <CardDescription>
+              Modifiez vos informations de profil
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Mot de passe actuel</Label>
-                <div className="relative">
-                  <Input
-                    id="currentPassword"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  >
-                    {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nom">Nom</Label>
+              <Input
+                id="nom"
+                value={nom}
+                onChange={(e) => setNom(e.target.value)}
+                placeholder="Votre nom"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-                <div className="relative">
-                  <Input
-                    id="newPassword"
-                    type={showNewPassword ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  >
-                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="prenoms">Prénoms</Label>
+              <Input
+                id="prenoms"
+                value={prenoms}
+                onChange={(e) => setPrenoms(e.target.value)}
+                placeholder="Vos prénoms"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="telephone" className="flex items-center gap-1">
+                <Phone size={14} />
+                Téléphone
+              </Label>
+              <Input
+                id="telephone"
+                value={telephone}
+                onChange={(e) => setTelephone(e.target.value)}
+                placeholder="+226 XX XX XX XX"
+              />
+            </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-primary hover:bg-primary/90"
-                disabled={isChangingPassword}
-              >
-                {isChangingPassword ? 'Modification...' : 'Modifier le mot de passe'}
-              </Button>
-            </form>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1">
+                <Mail size={14} />
+                Email
+              </Label>
+              <Input
+                value={profile?.email || ''}
+                disabled
+                className="bg-muted"
+              />
+              <p className="text-xs text-muted-foreground">
+                L'email ne peut pas être modifié
+              </p>
+            </div>
+
+            <Button 
+              className="w-full" 
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
+                  Enregistrement...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Save size={18} />
+                  Enregistrer les modifications
+                </span>
+              )}
+            </Button>
           </CardContent>
         </Card>
 
-        {/* Security Settings */}
+        {/* Security Badges */}
         <Card className="shadow-card">
-          <CardHeader className="pb-2">
+          <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Shield size={20} />
+              <Shield size={20} className="text-primary" />
               Sécurité
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-3">
-                <Smartphone size={20} className="text-primary" />
-                <div>
-                  <p className="font-medium">Authentification 2FA</p>
-                  <p className="text-xs text-muted-foreground">Double authentification par SMS</p>
-                </div>
-              </div>
-              <Switch 
-                checked={twoFactorEnabled} 
-                onCheckedChange={setTwoFactorEnabled}
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-3">
-                <Key size={20} className="text-primary" />
-                <div>
-                  <p className="font-medium">Biométrie</p>
-                  <p className="text-xs text-muted-foreground">Connexion par empreinte digitale</p>
-                </div>
-              </div>
-              <Switch 
-                checked={biometricEnabled} 
-                onCheckedChange={setBiometricEnabled}
-              />
-            </div>
-
-            {/* Security Badges */}
-            <div className="grid grid-cols-3 gap-2 pt-2">
+          <CardContent>
+            <div className="grid grid-cols-3 gap-2">
               <div className="text-center p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <Globe size={24} className="mx-auto mb-1 text-primary" />
+                <p className="text-lg mb-1">🔒</p>
                 <p className="text-xs font-medium">HTTPS</p>
-                <p className="text-[10px] text-muted-foreground">Connexion sécurisée</p>
               </div>
               <div className="text-center p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <Shield size={24} className="mx-auto mb-1 text-primary" />
-                <p className="text-xs font-medium">AES-256</p>
-                <p className="text-[10px] text-muted-foreground">Chiffrement</p>
+                <p className="text-lg mb-1">🛡️</p>
+                <p className="text-xs font-medium">Chiffré</p>
               </div>
               <div className="text-center p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <Lock size={24} className="mx-auto mb-1 text-primary" />
-                <p className="text-xs font-medium">2FA</p>
-                <p className="text-[10px] text-muted-foreground">Double auth.</p>
+                <p className="text-lg mb-1">✓</p>
+                <p className="text-xs font-medium">Vérifié</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Tutorial */}
-        <Card className="shadow-card">
-          <CardContent className="pt-6">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={showTutorial}
-            >
-              <BookOpen size={18} className="mr-3" />
-              Voir le tutoriel
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Logout */}
-        <Card className="shadow-card">
-          <CardContent className="pt-6">
-            <Button 
-              variant="destructive" 
-              className="w-full justify-start"
-              onClick={handleLogout}
-            >
-              <LogOut size={18} className="mr-3" />
-              Se déconnecter
-            </Button>
           </CardContent>
         </Card>
 
         {/* App Info */}
-        <div className="text-center text-sm text-muted-foreground">
-          <p>Faso Propre v1.0.0</p>
-          <p>© 2024 - Plateforme citoyenne du Burkina Faso</p>
-        </div>
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="text-lg">À propos</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Version</span>
+              <span>1.0.0</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Plateforme</span>
+              <span>Faso Propre</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Pays</span>
+              <span>🇧🇫 Burkina Faso</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Logout */}
+        <Card className="shadow-card border-destructive/30">
+          <CardContent className="pt-6">
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={handleLogout}
+            >
+              <LogOut size={18} className="mr-2" />
+              Se déconnecter
+            </Button>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
