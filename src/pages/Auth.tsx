@@ -1,38 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { MAJOR_CITIES } from '@/data/burkinaFaso';
 import { Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
-import logo from '@/assets/logo.png';
+import { z } from 'zod';
+
+const logo = '/logo.png';
 
 type AuthMode = 'login' | 'register';
 
+// Validation schemas
+const registerSchema = z.object({
+  nom: z.string().trim().min(2, 'Le nom doit contenir au moins 2 caractères').max(50),
+  prenoms: z.string().trim().min(2, 'Les prénoms doivent contenir au moins 2 caractères').max(100),
+  telephone: z.string().trim().regex(/^\+226\s?\d{2}\s?\d{2}\s?\d{2}\s?\d{2}$/, 'Format: +226 XX XX XX XX'),
+  email: z.string().trim().email('Email invalide').max(255),
+  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Les mots de passe ne correspondent pas',
+  path: ['confirmPassword'],
+});
+
+const loginSchema = z.object({
+  email: z.string().trim().email('Email invalide'),
+  password: z.string().min(1, 'Mot de passe requis'),
+});
+
 const Auth: React.FC = () => {
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   
   const [mode, setMode] = useState<AuthMode>('register');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [useManualCity, setUseManualCity] = useState(false);
 
   // Form fields
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [nom, setNom] = useState('');
+  const [prenoms, setPrenoms] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [city, setCity] = useState('');
-  const [manualCity, setManualCity] = useState('');
+  const [telephone, setTelephone] = useState('+226 ');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
+  const formatPhoneNumber = (value: string) => {
+    // Keep +226 prefix and format as +226 XX XX XX XX
+    let cleaned = value.replace(/[^\d+]/g, '');
+    if (!cleaned.startsWith('+226')) {
+      cleaned = '+226' + cleaned.replace(/^\+?226?/, '');
+    }
+    
+    const digits = cleaned.slice(4).slice(0, 8);
+    let formatted = '+226';
+    for (let i = 0; i < digits.length; i += 2) {
+      formatted += ' ' + digits.slice(i, i + 2);
+    }
+    return formatted;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setTelephone(formatted);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,71 +82,82 @@ const Auth: React.FC = () => {
 
     try {
       if (mode === 'register') {
-        if (password !== confirmPassword) {
-          toast({
-            title: "Erreur",
-            description: "Les mots de passe ne correspondent pas",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        if (password.length < 6) {
-          toast({
-            title: "Erreur",
-            description: "Le mot de passe doit contenir au moins 6 caractères",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        const selectedCity = useManualCity ? manualCity : city;
-        
-        if (!firstName || !lastName || !email || !phone || !selectedCity || !password) {
-          toast({
-            title: "Erreur",
-            description: "Veuillez remplir tous les champs obligatoires",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        const success = await register({
-          firstName,
-          lastName,
+        const validation = registerSchema.safeParse({
+          nom,
+          prenoms,
+          telephone,
           email,
-          phone,
-          city: selectedCity,
-          password
+          password,
+          confirmPassword,
         });
 
-        if (success) {
+        if (!validation.success) {
+          const firstError = validation.error.errors[0];
           toast({
-            title: "Inscription réussie",
-            description: "Bienvenue sur Faso Propre!"
+            title: 'Erreur de validation',
+            description: firstError.message,
+            variant: 'destructive',
           });
-          navigate('/dashboard');
-        } else {
+          return;
+        }
+
+        const result = await register({
+          nom: nom.trim(),
+          prenoms: prenoms.trim(),
+          telephone: telephone.trim(),
+          email: email.trim(),
+          password,
+        });
+
+        if (result.success) {
           toast({
-            title: "Erreur",
-            description: "Cette adresse email est déjà utilisée",
-            variant: "destructive"
+            title: 'Inscription réussie',
+            description: 'Vérifiez votre email pour confirmer votre compte.',
+          });
+          setMode('login');
+        } else {
+          let errorMessage = result.error || 'Erreur lors de l\'inscription';
+          if (result.error?.includes('already registered')) {
+            errorMessage = 'Cette adresse email est déjà utilisée';
+          }
+          toast({
+            title: 'Erreur',
+            description: errorMessage,
+            variant: 'destructive',
           });
         }
       } else {
-        const success = await login(email, password);
+        const validation = loginSchema.safeParse({ email, password });
         
-        if (success) {
+        if (!validation.success) {
+          const firstError = validation.error.errors[0];
           toast({
-            title: "Connexion réussie",
-            description: "Bon retour sur Faso Propre!"
+            title: 'Erreur de validation',
+            description: firstError.message,
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        const result = await login(email.trim(), password);
+        
+        if (result.success) {
+          toast({
+            title: 'Connexion réussie',
+            description: 'Bon retour sur Faso Propre!',
           });
           navigate('/dashboard');
         } else {
+          let errorMessage = result.error || 'Email ou mot de passe incorrect';
+          if (result.error?.includes('Invalid login')) {
+            errorMessage = 'Email ou mot de passe incorrect';
+          } else if (result.error?.includes('Email not confirmed')) {
+            errorMessage = 'Veuillez confirmer votre email avant de vous connecter';
+          }
           toast({
-            title: "Erreur",
-            description: "Email ou mot de passe incorrect",
-            variant: "destructive"
+            title: 'Erreur',
+            description: errorMessage,
+            variant: 'destructive',
           });
         }
       }
@@ -112,6 +165,14 @@ const Auth: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 flex items-center justify-center p-4">
@@ -141,71 +202,41 @@ const Auth: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'register' && (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">Prénom *</Label>
-                      <Input
-                        id="firstName"
-                        placeholder="Votre prénom"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Nom *</Label>
-                      <Input
-                        id="lastName"
-                        placeholder="Votre nom"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Téléphone *</Label>
+                    <Label htmlFor="nom">Nom *</Label>
                     <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+226 XX XX XX XX"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      id="nom"
+                      placeholder="Votre nom de famille"
+                      value={nom}
+                      onChange={(e) => setNom(e.target.value)}
                       required
+                      maxLength={50}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label>Ville *</Label>
-                      <button
-                        type="button"
-                        className="text-xs text-primary hover:underline"
-                        onClick={() => setUseManualCity(!useManualCity)}
-                      >
-                        {useManualCity ? 'Choisir dans la liste' : 'Saisir manuellement'}
-                      </button>
-                    </div>
-                    {useManualCity ? (
-                      <Input
-                        placeholder="Entrez votre ville"
-                        value={manualCity}
-                        onChange={(e) => setManualCity(e.target.value)}
-                        required
-                      />
-                    ) : (
-                      <Select value={city} onValueChange={setCity}>
-                        <SelectTrigger className="bg-card">
-                          <SelectValue placeholder="Sélectionnez votre ville" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover max-h-60">
-                          {MAJOR_CITIES.map((c) => (
-                            <SelectItem key={c} value={c}>{c}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
+                    <Label htmlFor="prenoms">Prénoms *</Label>
+                    <Input
+                      id="prenoms"
+                      placeholder="Vos prénoms"
+                      value={prenoms}
+                      onChange={(e) => setPrenoms(e.target.value)}
+                      required
+                      maxLength={100}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="telephone">Numéro de téléphone *</Label>
+                    <Input
+                      id="telephone"
+                      type="tel"
+                      placeholder="+226 XX XX XX XX"
+                      value={telephone}
+                      onChange={handlePhoneChange}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">Format: +226 XX XX XX XX</p>
                   </div>
                 </>
               )}
@@ -219,6 +250,7 @@ const Auth: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  maxLength={255}
                 />
               </div>
 
@@ -241,6 +273,9 @@ const Auth: React.FC = () => {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                {mode === 'register' && (
+                  <p className="text-xs text-muted-foreground">Minimum 6 caractères</p>
+                )}
               </div>
 
               {mode === 'register' && (
@@ -319,10 +354,10 @@ const Auth: React.FC = () => {
             🔒 HTTPS
           </span>
           <span className="flex items-center gap-1">
-            🛡️ AES-256
+            🛡️ Sécurisé
           </span>
           <span className="flex items-center gap-1">
-            ✓ 2FA
+            ✓ Burkina Faso
           </span>
         </div>
       </div>

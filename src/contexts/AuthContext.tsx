@@ -1,24 +1,34 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
-export interface User {
+export interface Profile {
   id: string;
-  firstName: string;
-  lastName: string;
+  user_id: string;
+  nom: string;
+  prenoms: string;
+  telephone: string;
   email: string;
-  phone: string;
-  city: string;
-  profilePhoto?: string;
-  createdAt: Date;
+  created_at: string;
+  updated_at: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
+  profile: Profile | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: Omit<User, 'id' | 'createdAt'> & { password: string }) => Promise<boolean>;
-  logout: () => void;
-  updateProfile: (updates: Partial<User>) => void;
-  updateProfilePhoto: (photoUrl: string) => void;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (userData: {
+    nom: string;
+    prenoms: string;
+    telephone: string;
+    email: string;
+    password: string;
+  }) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  updateProfile: (updates: Partial<Profile>) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,89 +47,155 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check for saved session
-    const savedUser = localStorage.getItem('faso_propre_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-  }, []);
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulated authentication - in production, this would call an API
-    const savedUsers = JSON.parse(localStorage.getItem('faso_propre_users') || '[]');
-    const foundUser = savedUsers.find((u: User & { password: string }) => 
-      u.email === email && u.password === password
-    );
-    
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('faso_propre_user', JSON.stringify(userWithoutPassword));
-      return true;
+    if (data && !error) {
+      setProfile(data as Profile);
     }
-    return false;
   };
 
-  const register = async (userData: Omit<User, 'id' | 'createdAt'> & { password: string }): Promise<boolean> => {
-    const savedUsers = JSON.parse(localStorage.getItem('faso_propre_users') || '[]');
-    
-    // Check if email already exists
-    if (savedUsers.some((u: User) => u.email === userData.email)) {
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Defer profile fetching with setTimeout to avoid deadlocks
+        if (session?.user) {
+          setTimeout(() => {
+            fetchProfile(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  };
+
+  const register = async (userData: {
+    nom: string;
+    prenoms: string;
+    telephone: string;
+    email: string;
+    password: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    const redirectUrl = `${window.location.origin}/`;
+
+    const { data, error } = await supabase.auth.signUp({
+      email: userData.email.trim(),
+      password: userData.password,
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    if (data.user) {
+      // Create profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: data.user.id,
+          nom: userData.nom.trim(),
+          prenoms: userData.prenoms.trim(),
+          telephone: userData.telephone.trim(),
+          email: userData.email.trim(),
+        });
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+      }
+
+      // Assign default user role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: data.user.id,
+          role: 'user',
+        });
+
+      if (roleError) {
+        console.error('Role assignment error:', roleError);
+      }
+    }
+
+    return { success: true };
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+  };
+
+  const updateProfile = async (updates: Partial<Profile>): Promise<boolean> => {
+    if (!user) return false;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Profile update error:', error);
       return false;
     }
 
-    const newUser = {
-      ...userData,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-    };
-
-    savedUsers.push(newUser);
-    localStorage.setItem('faso_propre_users', JSON.stringify(savedUsers));
-    
-    const { password: _, ...userWithoutPassword } = newUser;
-    setUser(userWithoutPassword);
-    localStorage.setItem('faso_propre_user', JSON.stringify(userWithoutPassword));
-    
+    // Refresh profile
+    await fetchProfile(user.id);
     return true;
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('faso_propre_user');
-  };
-
-  const updateProfile = (updates: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...updates };
-      setUser(updatedUser);
-      localStorage.setItem('faso_propre_user', JSON.stringify(updatedUser));
-      
-      // Also update in users list
-      const savedUsers = JSON.parse(localStorage.getItem('faso_propre_users') || '[]');
-      const userIndex = savedUsers.findIndex((u: User) => u.id === user.id);
-      if (userIndex !== -1) {
-        savedUsers[userIndex] = { ...savedUsers[userIndex], ...updates };
-        localStorage.setItem('faso_propre_users', JSON.stringify(savedUsers));
-      }
-    }
-  };
-
-  const updateProfilePhoto = (photoUrl: string) => {
-    updateProfile({ profilePhoto: photoUrl });
   };
 
   return (
     <AuthContext.Provider value={{
       user,
+      session,
+      profile,
       isAuthenticated: !!user,
+      isLoading,
       login,
       register,
       logout,
       updateProfile,
-      updateProfilePhoto,
     }}>
       {children}
     </AuthContext.Provider>

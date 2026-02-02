@@ -1,64 +1,81 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useReports } from '@/contexts/ReportsContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { REPORT_CATEGORIES, ReportCategory } from '@/data/burkinaFaso';
-import HierarchicalLocationPicker, { LocationSelection } from '@/components/location/HierarchicalLocationPicker';
+import { REPORT_CATEGORIES } from '@/data/burkinaFaso';
+import CitySelector from '@/components/location/CitySelector';
+import GPSCapture from '@/components/location/GPSCapture';
 import OnboardingGuide from '@/components/onboarding/OnboardingGuide';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   ArrowLeft, 
   Camera, 
-  MapPin, 
-  Navigation, 
   Send,
-  Phone,
-  Loader2,
-  HelpCircle
+  Trash2,
+  HelpCircle,
+  MapPin,
+  Building2
 } from 'lucide-react';
+
 const logo = '/logo.png';
 
 const NewReport: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { addReport } = useReports();
+  const { user, profile, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [category, setCategory] = useState<ReportCategory | ''>('');
-  const [subcategory, setSubcategory] = useState('');
-  const [location, setLocation] = useState<LocationSelection | undefined>();
-  const [description, setDescription] = useState('');
-  const [photo, setPhoto] = useState<string>('');
-  const [latitude, setLatitude] = useState<number | undefined>();
-  const [longitude, setLongitude] = useState<number | undefined>();
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Form state
+  const [category, setCategory] = useState('');
+  const [subcategory, setSubcategory] = useState('');
+  const [ville, setVille] = useState('');
+  const [arrondissement, setArrondissement] = useState('');
+  const [secteur, setSecteur] = useState('');
+  const [quartier, setQuartier] = useState('');
+  const [sousQuartier, setSousQuartier] = useState('');
+  const [description, setDescription] = useState('');
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
   useEffect(() => {
-    // Vérifier si l'utilisateur a déjà vu le guide
-    const onboardingComplete = localStorage.getItem('faso-propre-onboarding-complete');
-    if (!onboardingComplete) {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/auth');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('faso_propre_onboarding_seen');
+    if (!hasSeenOnboarding) {
       setShowOnboarding(true);
     }
   }, []);
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'Fichier trop volumineux',
+        description: 'La photo ne doit pas dépasser 5 Mo',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setPhotoFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
       setPhoto(reader.result as string);
@@ -66,46 +83,32 @@ const NewReport: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Erreur",
-        description: "La géolocalisation n'est pas supportée par votre navigateur",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsGettingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLatitude(position.coords.latitude);
-        setLongitude(position.coords.longitude);
-        setIsGettingLocation(false);
-        toast({
-          title: "Position obtenue",
-          description: "Votre position GPS a été enregistrée"
-        });
-      },
-      (error) => {
-        setIsGettingLocation(false);
-        toast({
-          title: "Erreur",
-          description: "Impossible d'obtenir votre position. Veuillez autoriser la géolocalisation.",
-          variant: "destructive"
-        });
-      }
-    );
+  const handleGPSCapture = (lat: number, lng: number) => {
+    setLatitude(lat);
+    setLongitude(lng);
+    toast({
+      title: 'Position capturée',
+      description: 'Vos coordonnées GPS ont été enregistrées',
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!category || !subcategory || !location || !photo) {
+    if (!user || !profile) {
       toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires et ajouter une photo",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Vous devez être connecté',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!category || !subcategory || !ville || !photo) {
+      toast({
+        title: 'Champs obligatoires',
+        description: 'Veuillez remplir tous les champs obligatoires et ajouter une photo',
+        variant: 'destructive',
       });
       return;
     }
@@ -113,80 +116,101 @@ const NewReport: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Construire la chaîne de localisation complète
-      const locationParts = [location.city];
-      if (location.arrondissement) locationParts.push(location.arrondissement);
-      locationParts.push(location.sector, location.quarter, location.subQuarter);
+      let photoUrl = '';
 
-      addReport({
-        userId: user.id,
-        category: category as ReportCategory,
-        subcategory,
-        city: location.city,
-        neighborhood: locationParts.slice(1).join(' → '), // Tout sauf la ville
-        description,
-        photo,
-        latitude,
-        longitude
-      });
+      // Upload photo to storage
+      if (photoFile) {
+        const fileExt = photoFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('signalements-photos')
+          .upload(fileName, photoFile);
+
+        if (uploadError) {
+          throw new Error('Erreur lors de l\'upload de la photo');
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('signalements-photos')
+          .getPublicUrl(fileName);
+        
+        photoUrl = publicUrl;
+      }
+
+      // Create signalement
+      const nomComplet = `${profile.prenoms} ${profile.nom}`;
+      
+      const { error } = await supabase
+        .from('signalements')
+        .insert({
+          user_id: user.id,
+          nom_complet: nomComplet,
+          category,
+          subcategory,
+          ville,
+          arrondissement: arrondissement || null,
+          secteur: secteur || null,
+          quartier: quartier || null,
+          sous_quartier: sousQuartier || null,
+          description: description || null,
+          photo_url: photoUrl,
+          latitude: latitude,
+          longitude: longitude,
+          status: 'PENDING',
+          statut_paiement: 'en_attente',
+          montant_total: 0,
+          commission_montant: 0,
+        });
+
+      if (error) {
+        throw error;
+      }
 
       toast({
-        title: "Signalement envoyé",
-        description: "Votre signalement a été enregistré avec succès"
+        title: 'Signalement envoyé!',
+        description: 'Votre signalement a été transmis aux autorités compétentes.',
       });
 
       navigate('/dashboard');
     } catch (error) {
+      console.error('Submit error:', error);
       toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de l'envoi du signalement",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de l\'envoi du signalement',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const selectedCategory = category ? REPORT_CATEGORIES[category] : null;
+  const selectedCategory = category ? REPORT_CATEGORIES[category as keyof typeof REPORT_CATEGORIES] : null;
 
-  // Construire l'affichage de la localisation
-  const locationDisplay = location ? (
-    <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted/50 rounded-lg">
-      <p className="font-medium text-foreground mb-1">📍 Localisation sélectionnée :</p>
-      <div className="space-y-0.5">
-        <p>🏙️ Ville : <span className="text-foreground">{location.city}</span></p>
-        {location.arrondissement && (
-          <p>🏛️ Arrondissement : <span className="text-foreground">{location.arrondissement}</span></p>
-        )}
-        <p>📍 Secteur : <span className="text-foreground">{location.sector}</span></p>
-        <p>🏘️ Quartier : <span className="text-foreground">{location.quarter}</span></p>
-        <p>📌 Sous-quartier : <span className="text-foreground font-medium">{location.subQuarter}</span></p>
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
       </div>
-    </div>
-  ) : null;
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Onboarding Guide */}
-      <OnboardingGuide 
-        open={showOnboarding} 
-        onOpenChange={setShowOnboarding}
-      />
-
       {/* Header */}
-      <header className="gradient-hero text-primary-foreground shadow-lg">
+      <header className="gradient-hero text-primary-foreground shadow-lg sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
+              <Button 
+                variant="ghost" 
                 size="icon"
                 className="text-primary-foreground hover:bg-primary-foreground/10"
                 onClick={() => navigate('/dashboard')}
               >
                 <ArrowLeft size={20} />
               </Button>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-card overflow-hidden">
                   <img src={logo} alt="Faso Propre" className="w-full h-full object-cover" />
                 </div>
@@ -206,191 +230,204 @@ const NewReport: React.FC = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 max-w-lg mx-auto">
           {/* Category Selection */}
-          <Card className="shadow-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Catégorie *</CardTitle>
+          <Card className="shadow-card animate-slide-up">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Type de problème</CardTitle>
+              <CardDescription>Sélectionnez la catégorie du signalement</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {Object.entries(REPORT_CATEGORIES).map(([key, cat]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`p-4 rounded-lg border-2 transition-all text-center ${
-                      category === key 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                    onClick={() => {
-                      setCategory(key as ReportCategory);
-                      setSubcategory('');
-                    }}
-                  >
-                    <span className="text-3xl block mb-2">{cat.icon}</span>
-                    <span className="text-sm font-medium">{cat.name.split('(')[0].trim()}</span>
-                  </button>
-                ))}
-              </div>
-
-              {selectedCategory && (
-                <div className="p-3 rounded-lg bg-muted/50 flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    📞 Numéro d'urgence
-                  </span>
-                  <a 
-                    href={`tel:${selectedCategory.phone.replace(/\s/g, '')}`}
-                    className="flex items-center gap-1 text-primary font-medium"
-                  >
-                    <Phone size={16} />
-                    {selectedCategory.phone}
-                  </a>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Subcategory */}
-          {category && (
-            <Card className="shadow-card animate-scale-in">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Type de problème *</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Select value={subcategory} onValueChange={setSubcategory}>
+              <div className="space-y-2">
+                <Label>Catégorie *</Label>
+                <Select value={category} onValueChange={(val) => {
+                  setCategory(val);
+                  setSubcategory('');
+                }}>
                   <SelectTrigger className="bg-card">
-                    <SelectValue placeholder="Sélectionnez le type de problème" />
+                    <SelectValue placeholder="Sélectionnez une catégorie" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover">
-                    {REPORT_CATEGORIES[category].subcategories.map((sub) => (
-                      <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                    {Object.entries(REPORT_CATEGORIES).map(([key, cat]) => (
+                      <SelectItem key={key} value={key}>
+                        {cat.icon} {cat.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </CardContent>
-            </Card>
-          )}
+              </div>
 
-          {/* Location - Hierarchical Picker */}
-          <Card className="shadow-card">
-            <CardHeader className="pb-2">
+              {selectedCategory && (
+                <div className="space-y-2">
+                  <Label>Sous-catégorie *</Label>
+                  <Select value={subcategory} onValueChange={setSubcategory}>
+                    <SelectTrigger className="bg-card">
+                      <SelectValue placeholder="Précisez le type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      {selectedCategory.subcategories.map((sub) => (
+                        <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Location Section */}
+          <Card className="shadow-card animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <MapPin size={20} />
-                Localisation précise *
+                <MapPin size={20} className="text-primary" />
+                Localisation précise
               </CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">
-                Ville → Arrondissement → Secteur → Quartier → Sous-quartier
-              </p>
+              <CardDescription>
+                Plus vous êtes précis, plus vite nous interviendrons
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <HierarchicalLocationPicker
-                value={location}
-                onSelect={setLocation}
-                placeholder="Sélectionnez votre localisation..."
-              />
-              
-              {locationDisplay}
+              {/* City Selector with Search */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1">
+                  <Building2 size={14} />
+                  Ville / Commune *
+                </Label>
+                <CitySelector value={ville} onChange={setVille} />
+              </div>
 
-              {/* GPS */}
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleGetLocation}
-                disabled={isGettingLocation}
-              >
-                {isGettingLocation ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="animate-spin" size={18} />
-                    Obtention de la position...
-                  </span>
-                ) : latitude && longitude ? (
-                  <span className="flex items-center gap-2 text-accent">
-                    <Navigation size={18} />
-                    Position GPS enregistrée ✓
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <Navigation size={18} />
-                    Obtenir ma position GPS
-                  </span>
-                )}
-              </Button>
+              {/* Manual Input Fields */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Arrondissement</Label>
+                  <Input
+                    placeholder="Ex: Arrondissement 1"
+                    value={arrondissement}
+                    onChange={(e) => setArrondissement(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Secteur</Label>
+                  <Input
+                    placeholder="Ex: Secteur 15"
+                    value={secteur}
+                    onChange={(e) => setSecteur(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Quartier</Label>
+                  <Input
+                    placeholder="Ex: Patte d'Oie"
+                    value={quartier}
+                    onChange={(e) => setQuartier(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Sous-quartier</Label>
+                  <Input
+                    placeholder="Ex: Zone A"
+                    value={sousQuartier}
+                    onChange={(e) => setSousQuartier(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* GPS Capture */}
+              <div className="pt-2 border-t">
+                <Label className="mb-3 block">Position GPS</Label>
+                <GPSCapture
+                  latitude={latitude}
+                  longitude={longitude}
+                  onCapture={handleGPSCapture}
+                />
+              </div>
             </CardContent>
           </Card>
 
-          {/* Photo */}
-          <Card className="shadow-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Camera size={20} />
-                Photo *
-              </CardTitle>
+          {/* Photo & Description */}
+          <Card className="shadow-card animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Documentation</CardTitle>
+              <CardDescription>Ajoutez une photo et des détails</CardDescription>
             </CardHeader>
-            <CardContent>
-              {photo ? (
-                <div className="relative">
-                  <img 
-                    src={photo} 
-                    alt="Preview" 
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="absolute bottom-2 right-2"
+            <CardContent className="space-y-4">
+              {/* Photo Upload */}
+              <div className="space-y-2">
+                <Label>Photo du problème *</Label>
+                {photo ? (
+                  <div className="relative">
+                    <img 
+                      src={photo} 
+                      alt="Aperçu" 
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={() => {
+                        setPhoto(null);
+                        setPhotoFile(null);
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className="border-2 border-dashed border-primary/30 rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    Changer
-                  </Button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  className="w-full h-48 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-3 hover:border-primary/50 transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Camera size={40} className="text-muted-foreground" />
-                  <span className="text-muted-foreground">Ajouter une photo</span>
-                </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={handlePhotoUpload}
-              />
+                    <Camera size={40} className="mx-auto text-primary/50 mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Touchez pour prendre ou choisir une photo
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Max 5 Mo • JPG, PNG
+                    </p>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handlePhotoCapture}
+                />
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <Label>Description (optionnel)</Label>
+                <Textarea
+                  placeholder="Décrivez le problème en détail..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  maxLength={500}
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {description.length}/500
+                </p>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Description */}
-          <Card className="shadow-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Description (optionnel)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Décrivez le problème en détail..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={4}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Submit */}
+          {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full py-6 text-lg bg-primary hover:bg-primary/90"
-            disabled={isSubmitting}
+            size="lg"
+            className="w-full bg-primary hover:bg-primary/90"
+            disabled={isSubmitting || !category || !subcategory || !ville || !photo}
           >
             {isSubmitting ? (
               <span className="flex items-center gap-2">
-                <Loader2 className="animate-spin" size={20} />
+                <span className="animate-spin h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full" />
                 Envoi en cours...
               </span>
             ) : (
@@ -402,6 +439,17 @@ const NewReport: React.FC = () => {
           </Button>
         </form>
       </main>
+
+      {/* Onboarding Guide */}
+      <OnboardingGuide 
+        open={showOnboarding} 
+        onOpenChange={(open) => {
+          setShowOnboarding(open);
+          if (!open) {
+            localStorage.setItem('faso_propre_onboarding_seen', 'true');
+          }
+        }} 
+      />
     </div>
   );
 };
