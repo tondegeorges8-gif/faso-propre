@@ -11,6 +11,7 @@ import NewReport from "./pages/NewReport";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import CollectorDashboard from "./pages/CollectorDashboard";
+import FounderDashboard from "./pages/FounderDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/collector" element={<CollectorDashboard />} />
+            <Route path="/founder" element={<FounderDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
