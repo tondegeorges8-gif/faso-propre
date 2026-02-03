@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      founder_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          related_user_id: string | null
+          transaction_type: string
+          withdrawal_network: string | null
+          withdrawal_phone: string | null
+          withdrawal_status: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          related_user_id?: string | null
+          transaction_type: string
+          withdrawal_network?: string | null
+          withdrawal_phone?: string | null
+          withdrawal_status?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          related_user_id?: string | null
+          transaction_type?: string
+          withdrawal_network?: string | null
+          withdrawal_phone?: string | null
+          withdrawal_status?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -136,7 +172,16 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      founder_balance: {
+        Row: {
+          current_balance: number | null
+          total_commissions: number | null
+          total_inscription_gains: number | null
+          total_inscriptions: number | null
+          total_withdrawn: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
@@ -146,6 +191,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_founder: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "user" | "collector" | "admin" | "founder"

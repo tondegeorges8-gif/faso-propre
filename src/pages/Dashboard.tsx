@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { REPORT_CATEGORIES, REPORT_STATUSES } from '@/data/burkinaFaso';
+import { INSTITUTIONS, REPORT_STATUSES } from '@/data/institutions';
+import { useFounderAccess } from '@/hooks/useFounderAccess';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Plus, 
@@ -15,7 +16,8 @@ import {
   Clock,
   Phone,
   Truck,
-  CreditCard
+  CreditCard,
+  Crown
 } from 'lucide-react';
 
 const logo = '/logo.png';
@@ -36,6 +38,7 @@ interface Signalement {
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, logout, isAuthenticated, isLoading } = useAuth();
+  const { isFounder } = useFounderAccess();
   const [userSignalements, setUserSignalements] = useState<Signalement[]>([]);
   const [loadingSignalements, setLoadingSignalements] = useState(true);
 
@@ -236,7 +239,7 @@ const Dashboard: React.FC = () => {
 
         {/* Collector Access */}
         <Card className="shadow-card border-secondary/50">
-          <CardContent className="pt-4 pb-4">
+          <CardContent className="pt-4 pb-4 space-y-3">
             <Button
               variant="outline"
               className="w-full h-auto py-4 border-secondary text-secondary-foreground hover:bg-secondary/10"
@@ -248,6 +251,21 @@ const Dashboard: React.FC = () => {
                 <p className="text-xs opacity-70">Gérer les missions de collecte</p>
               </div>
             </Button>
+
+            {/* Founder Access - Only visible to founders */}
+            {isFounder && (
+              <Button
+                variant="outline"
+                className="w-full h-auto py-4 border-primary text-primary hover:bg-primary/10"
+                onClick={() => navigate('/founder')}
+              >
+                <Crown size={24} className="mr-2" />
+                <div className="text-left">
+                  <p className="font-medium">Espace Fondateur</p>
+                  <p className="text-xs opacity-70">Tableau de bord administratif</p>
+                </div>
+              </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -257,24 +275,24 @@ const Dashboard: React.FC = () => {
             <CardTitle className="text-lg">Numéros d'urgence</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {Object.entries(REPORT_CATEGORIES).map(([key, category]) => (
+            {Object.entries(INSTITUTIONS).map(([key, institution]) => (
               <div 
                 key={key}
                 className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{category.icon}</span>
+                  <span className="text-2xl">{institution.icon}</span>
                   <div>
-                    <p className="font-medium text-sm">{category.name}</p>
-                    <p className="text-xs text-muted-foreground">{category.subcategories.length} types</p>
+                    <p className="font-medium text-sm">{institution.nom}</p>
+                    <p className="text-xs text-muted-foreground">{institution.options.length} types</p>
                   </div>
                 </div>
                 <a 
-                  href={`tel:${category.phone.replace(/\s/g, '')}`}
+                  href={`tel:${institution.phone.replace(/\s/g, '')}`}
                   className="flex items-center gap-1 text-primary hover:underline text-sm"
                 >
                   <Phone size={14} />
-                  {category.phone}
+                  {institution.phone}
                 </a>
               </div>
             ))}
@@ -289,7 +307,7 @@ const Dashboard: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {userSignalements.slice(0, 3).map((report) => {
-                const category = REPORT_CATEGORIES[report.category as keyof typeof REPORT_CATEGORIES];
+                const institution = INSTITUTIONS[report.category as keyof typeof INSTITUTIONS];
                 return (
                   <div 
                     key={report.id}
@@ -304,7 +322,7 @@ const Dashboard: React.FC = () => {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">
-                        {category?.icon} {report.subcategory}
+                        {institution?.icon} {report.subcategory}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">
                         {report.ville}{report.quartier ? `, ${report.quartier}` : ''}

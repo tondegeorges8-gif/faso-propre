@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { REPORT_CATEGORIES } from '@/data/burkinaFaso';
+import { INSTITUTIONS } from '@/data/institutions';
 import CitySelector from '@/components/location/CitySelector';
 import GPSCapture from '@/components/location/GPSCapture';
 import OnboardingGuide from '@/components/onboarding/OnboardingGuide';
@@ -185,7 +185,7 @@ const NewReport: React.FC = () => {
     }
   };
 
-  const selectedCategory = category ? REPORT_CATEGORIES[category as keyof typeof REPORT_CATEGORIES] : null;
+  const selectedInstitution = category ? INSTITUTIONS[category as keyof typeof INSTITUTIONS] : null;
 
   if (authLoading) {
     return (
@@ -248,25 +248,25 @@ const NewReport: React.FC = () => {
                     <SelectValue placeholder="Sélectionnez une catégorie" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover">
-                    {Object.entries(REPORT_CATEGORIES).map(([key, cat]) => (
+                    {Object.entries(INSTITUTIONS).map(([key, inst]) => (
                       <SelectItem key={key} value={key}>
-                        {cat.icon} {cat.name}
+                        {inst.icon} {inst.nom}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {selectedCategory && (
+              {selectedInstitution && (
                 <div className="space-y-2">
-                  <Label>Sous-catégorie *</Label>
+                  <Label>Type de problème *</Label>
                   <Select value={subcategory} onValueChange={setSubcategory}>
                     <SelectTrigger className="bg-card">
                       <SelectValue placeholder="Précisez le type" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover">
-                      {selectedCategory.subcategories.map((sub) => (
-                        <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                      {selectedInstitution.options.map((option) => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
