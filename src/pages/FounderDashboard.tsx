@@ -15,7 +15,9 @@ import {
   Wallet, 
   Building2, 
   History,
-  AlertTriangle
+  AlertTriangle,
+  Users,
+  Star
 } from 'lucide-react';
 
 const logo = '/logo.png';
@@ -226,6 +228,26 @@ const FounderDashboard: React.FC = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6">
+        {/* Quick Admin Links */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Button
+            variant="outline"
+            className="h-auto py-4 flex flex-col gap-2"
+            onClick={() => navigate('/sponsors')}
+          >
+            <Users size={24} />
+            <span className="text-sm">Gérer Partenaires</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-auto py-4 flex flex-col gap-2"
+            onClick={() => navigate('/loyalty')}
+          >
+            <Star size={24} />
+            <span className="text-sm">Programme Fidélité</span>
+          </Button>
+        </div>
+        
         <Tabs defaultValue="balance" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="balance" className="flex items-center gap-2">
