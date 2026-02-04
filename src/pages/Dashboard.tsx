@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { INSTITUTIONS, REPORT_STATUSES } from '@/data/institutions';
 import { useFounderAccess } from '@/hooks/useFounderAccess';
 import { supabase } from '@/integrations/supabase/client';
+import LoyaltyPointsCard from '@/components/loyalty/LoyaltyPointsCard';
+import SponsorBanner from '@/components/sponsors/SponsorBanner';
 import { 
   Plus, 
   Settings, 
@@ -17,7 +19,8 @@ import {
   Phone,
   Truck,
   CreditCard,
-  Crown
+  Crown,
+  Star
 } from 'lucide-react';
 
 const logo = '/logo.png';
@@ -236,6 +239,15 @@ const Dashboard: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Loyalty Points & Sponsor Banner */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <LoyaltyPointsCard 
+            compact 
+            onViewRewards={() => navigate('/loyalty')} 
+          />
+          <SponsorBanner variant="inline" />
+        </div>
 
         {/* Collector Access */}
         <Card className="shadow-card border-secondary/50">

@@ -50,6 +50,101 @@ export type Database = {
         }
         Relationships: []
       }
+      loyalty_rewards: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          points_cost: number
+          redemptions_count: number | null
+          sponsor_id: string | null
+          stock_quantity: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          points_cost: number
+          redemptions_count?: number | null
+          sponsor_id?: string | null
+          stock_quantity?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          points_cost?: number
+          redemptions_count?: number | null
+          sponsor_id?: string | null
+          stock_quantity?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_rewards_sponsor_id_fkey"
+            columns: ["sponsor_id"]
+            isOneToOne: false
+            referencedRelation: "sponsors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          points: number
+          related_signalement_id: string | null
+          related_sponsor_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points: number
+          related_signalement_id?: string | null
+          related_sponsor_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points?: number
+          related_signalement_id?: string | null
+          related_sponsor_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_transactions_related_signalement_id_fkey"
+            columns: ["related_signalement_id"]
+            isOneToOne: false
+            referencedRelation: "signalements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_transactions_related_sponsor_id_fkey"
+            columns: ["related_sponsor_id"]
+            isOneToOne: false
+            referencedRelation: "sponsors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -149,6 +244,152 @@ export type Database = {
           updated_at?: string
           user_id?: string
           ville?: string
+        }
+        Relationships: []
+      }
+      sponsor_ads: {
+        Row: {
+          action_label: string | null
+          action_url: string | null
+          banner_image_url: string | null
+          clicks_count: number | null
+          created_at: string
+          description: string | null
+          display_type: string | null
+          end_date: string | null
+          id: string
+          impressions_count: number | null
+          is_active: boolean | null
+          priority: number | null
+          sponsor_id: string
+          start_date: string | null
+          target_institutions: string[] | null
+          title: string
+        }
+        Insert: {
+          action_label?: string | null
+          action_url?: string | null
+          banner_image_url?: string | null
+          clicks_count?: number | null
+          created_at?: string
+          description?: string | null
+          display_type?: string | null
+          end_date?: string | null
+          id?: string
+          impressions_count?: number | null
+          is_active?: boolean | null
+          priority?: number | null
+          sponsor_id: string
+          start_date?: string | null
+          target_institutions?: string[] | null
+          title: string
+        }
+        Update: {
+          action_label?: string | null
+          action_url?: string | null
+          banner_image_url?: string | null
+          clicks_count?: number | null
+          created_at?: string
+          description?: string | null
+          display_type?: string | null
+          end_date?: string | null
+          id?: string
+          impressions_count?: number | null
+          is_active?: boolean | null
+          priority?: number | null
+          sponsor_id?: string
+          start_date?: string | null
+          target_institutions?: string[] | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsor_ads_sponsor_id_fkey"
+            columns: ["sponsor_id"]
+            isOneToOne: false
+            referencedRelation: "sponsors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsors: {
+        Row: {
+          advantage: string | null
+          category: string
+          code: string
+          contact_email: string | null
+          contract_end: string | null
+          contract_start: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          monthly_fee: number | null
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          advantage?: string | null
+          category: string
+          code: string
+          contact_email?: string | null
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          monthly_fee?: number | null
+          name: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          advantage?: string | null
+          category?: string
+          code?: string
+          contact_email?: string | null
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          monthly_fee?: number | null
+          name?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_loyalty_points: {
+        Row: {
+          created_at: string
+          id: string
+          lifetime_earned: number
+          lifetime_spent: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lifetime_earned?: number
+          lifetime_spent?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lifetime_earned?: number
+          lifetime_spent?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
