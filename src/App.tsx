@@ -14,6 +14,7 @@ import CollectorDashboard from "./pages/CollectorDashboard";
 import FounderDashboard from "./pages/FounderDashboard";
 import LoyaltyPage from "./pages/LoyaltyPage";
 import SponsorsAdmin from "./pages/SponsorsAdmin";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/founder" element={<FounderDashboard />} />
             <Route path="/loyalty" element={<LoyaltyPage />} />
             <Route path="/sponsors" element={<SponsorsAdmin />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
