@@ -11,9 +11,9 @@ import {
   MapPin,
   Calendar,
   CreditCard,
-  Filter,
-  Plus
+  Filter
 } from 'lucide-react';
+import BottomNavigation from '@/components/navigation/BottomNavigation';
 
 const logo = '/logo.png';
 
@@ -132,7 +132,7 @@ const Reports: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="gradient-hero text-primary-foreground shadow-lg sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
@@ -304,15 +304,9 @@ const Reports: React.FC = () => {
             })}
           </div>
         )}
-
-        {/* FAB */}
-        <Button
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg bg-primary hover:bg-primary/90"
-          onClick={() => navigate('/new-report')}
-        >
-          <Plus size={24} />
-        </Button>
       </main>
+
+      <BottomNavigation />
     </div>
   );
 };

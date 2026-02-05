@@ -22,6 +22,7 @@ import {
   MapPin,
   Building2
 } from 'lucide-react';
+import BottomNavigation from '@/components/navigation/BottomNavigation';
 
 const logo = '/logo.png';
 
@@ -196,7 +197,7 @@ const NewReport: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="gradient-hero text-primary-foreground shadow-lg sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
@@ -439,6 +440,8 @@ const NewReport: React.FC = () => {
           </Button>
         </form>
       </main>
+
+      <BottomNavigation />
 
       {/* Onboarding Guide */}
       <OnboardingGuide 

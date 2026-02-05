@@ -3,24 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { INSTITUTIONS, REPORT_STATUSES } from '@/data/institutions';
 import { useFounderAccess } from '@/hooks/useFounderAccess';
 import { supabase } from '@/integrations/supabase/client';
 import LoyaltyPointsCard from '@/components/loyalty/LoyaltyPointsCard';
 import SponsorBanner from '@/components/sponsors/SponsorBanner';
+import BottomNavigation from '@/components/navigation/BottomNavigation';
+import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload';
 import { 
   Plus, 
   Settings, 
   LogOut, 
-  MapPin,
   Clock,
   Phone,
   Truck,
   CreditCard,
   Crown,
-  Star
 } from 'lucide-react';
 
 const logo = '/logo.png';
@@ -131,7 +130,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="gradient-hero text-primary-foreground shadow-lg">
         <div className="container mx-auto px-4 py-4">
@@ -169,11 +168,10 @@ const Dashboard: React.FC = () => {
         <Card className="shadow-card animate-slide-up">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <Avatar className="w-20 h-20 border-4 border-primary/20">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                  {profile.prenoms[0]}{profile.nom[0]}
-                </AvatarFallback>
-              </Avatar>
+              <ProfilePhotoUpload
+                currentAvatarUrl={(profile as any).avatar_url}
+                initials={`${profile.prenoms[0]}${profile.nom[0]}`}
+              />
               <div>
                 <h2 className="text-xl font-semibold">
                   {profile.prenoms} {profile.nom}
@@ -361,6 +359,8 @@ const Dashboard: React.FC = () => {
           </Card>
         )}
       </main>
+
+      <BottomNavigation />
     </div>
   );
 };
