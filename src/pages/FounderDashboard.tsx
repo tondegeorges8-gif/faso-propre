@@ -4,11 +4,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFounderAccess } from '@/hooks/useFounderAccess';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BalanceCard from '@/components/founder/BalanceCard';
 import WithdrawalForm from '@/components/founder/WithdrawalForm';
 import TransactionHistory from '@/components/founder/TransactionHistory';
 import InstitutionStats from '@/components/founder/InstitutionStats';
+import FounderLockScreen from '@/components/founder/FounderLockScreen';
+import BottomNavigation from '@/components/navigation/BottomNavigation';
 import { 
   ArrowLeft, 
   Shield, 
@@ -17,7 +20,9 @@ import {
   History,
   AlertTriangle,
   Users,
-  Star
+  Star,
+  TrendingUp,
+  FileText
 } from 'lucide-react';
 
 const logo = '/logo.png';
@@ -53,6 +58,11 @@ const FounderDashboard: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { isFounder, isLoading: founderLoading } = useFounderAccess();
   
+  // Écran de verrouillage
+  const [isUnlocked, setIsUnlocked] = useState(() => {
+    return sessionStorage.getItem('founder_access') === 'granted';
+  });
+  
   const [balance, setBalance] = useState<FounderBalance>({
     current_balance: 0,
     total_inscriptions: 0,
@@ -62,6 +72,10 @@ const FounderDashboard: React.FC = () => {
   });
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [institutionStats, setInstitutionStats] = useState<InstitutionStat[]>([]);
+  const [last30DaysStats, setLast30DaysStats] = useState({
+    totalCollectes: 0,
+    totalRevenus: 0
+  });
   const [loading, setLoading] = useState(true);
 
   const isLoading = authLoading || founderLoading;
@@ -73,10 +87,10 @@ const FounderDashboard: React.FC = () => {
   }, [user, isLoading, navigate]);
 
   useEffect(() => {
-    if (!isLoading && user && isFounder) {
+    if (!isLoading && user && isFounder && isUnlocked) {
       fetchFounderData();
     }
-  }, [user, isFounder, isLoading]);
+  }, [user, isFounder, isLoading, isUnlocked]);
 
   const fetchFounderData = async () => {
     try {
@@ -110,10 +124,15 @@ const FounderDashboard: React.FC = () => {
       // Fetch institution stats from signalements
       const { data: signalements } = await supabase
         .from('signalements')
-        .select('category, statut_paiement, montant_total');
+        .select('category, statut_paiement, montant_total, created_at');
 
       if (signalements) {
         const statsMap = new Map<string, InstitutionStat>();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        let collectes30Days = 0;
+        let revenus30Days = 0;
         
         signalements.forEach((s) => {
           const existing = statsMap.get(s.category) || {
@@ -130,9 +149,21 @@ const FounderDashboard: React.FC = () => {
           }
           
           statsMap.set(s.category, existing);
+          
+          // Stats 30 derniers jours
+          if (new Date(s.created_at) >= thirtyDaysAgo) {
+            collectes30Days++;
+            if (s.statut_paiement === 'paye') {
+              revenus30Days += Number(s.montant_total) || 0;
+            }
+          }
         });
         
         setInstitutionStats(Array.from(statsMap.values()));
+        setLast30DaysStats({
+          totalCollectes: collectes30Days,
+          totalRevenus: revenus30Days
+        });
       }
     } catch (error) {
       console.error('Error fetching founder data:', error);
@@ -142,6 +173,14 @@ const FounderDashboard: React.FC = () => {
   };
 
   const handleWithdraw = async (amount: number, phone: string, network: string): Promise<boolean> => {
+    const networkLabels: Record<string, string> = {
+      orange_money: 'Orange Money',
+      moov_money: 'Moov Money',
+      telecel_faso: 'Telecel Faso',
+      wave_burkina: 'Wave Burkina',
+      coris_bank: 'Coris Bank International'
+    };
+    
     try {
       const { error } = await supabase
         .from('founder_transactions')
@@ -151,7 +190,7 @@ const FounderDashboard: React.FC = () => {
           withdrawal_phone: phone,
           withdrawal_network: network,
           withdrawal_status: 'pending',
-          description: `Retrait ${network === 'orange_money' ? 'Orange Money' : 'Moov Money'} vers ${phone}`
+          description: `Retrait ${networkLabels[network] || network} vers ${phone}`
         });
 
       if (error) throw error;
@@ -165,7 +204,11 @@ const FounderDashboard: React.FC = () => {
     }
   };
 
-  if (isLoading || loading) {
+  const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -197,21 +240,29 @@ const FounderDashboard: React.FC = () => {
     );
   }
 
+  // Écran de verrouillage
+  if (!isUnlocked) {
+    return <FounderLockScreen onUnlock={() => setIsUnlocked(true)} />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-muted-foreground">Chargement des données...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="bg-gradient-to-r from-primary via-primary/90 to-secondary text-primary-foreground shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-primary-foreground hover:bg-primary-foreground/10"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft size={20} />
-              </Button>
               <div className="w-10 h-10 rounded-full bg-card overflow-hidden">
                 <img src={logo} alt="Faso Propre" className="w-full h-full object-cover" />
               </div>
@@ -227,9 +278,27 @@ const FounderDashboard: React.FC = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Solde actuel - Cliquable */}
+        <Card 
+          className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+          onClick={() => navigate('/founder')}
+        >
+          <CardContent className="pt-6 pb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-primary-foreground/20 rounded-full flex items-center justify-center">
+                <Wallet size={28} />
+              </div>
+              <div>
+                <p className="text-sm opacity-80">💰 Mon Solde Actuel</p>
+                <p className="text-3xl font-bold">{formatMoney(balance.current_balance)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Quick Admin Links */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-4">
           <Button
             variant="outline"
             className="h-auto py-4 flex flex-col gap-2"
@@ -247,12 +316,39 @@ const FounderDashboard: React.FC = () => {
             <span className="text-sm">Programme Fidélité</span>
           </Button>
         </div>
-        
-        <Tabs defaultValue="balance" className="space-y-6">
+
+        {/* Historique 30 jours */}
+        <Card className="shadow-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <TrendingUp size={20} />
+              📅 Historique (30 derniers jours)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <FileText size={18} className="text-primary" />
+                <span className="text-sm">Collectes totales</span>
+              </div>
+              <span className="font-bold text-lg">{last30DaysStats.totalCollectes} signalements</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Wallet size={18} className="text-status-resolved" />
+                <span className="text-sm">Revenus générés</span>
+              </div>
+              <span className="font-bold text-lg text-status-resolved">{formatMoney(last30DaysStats.totalRevenus)}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Onglets */}
+        <Tabs defaultValue="retrait" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="balance" className="flex items-center gap-2">
+            <TabsTrigger value="retrait" className="flex items-center gap-2">
               <Wallet size={16} />
-              <span className="hidden sm:inline">Solde</span>
+              <span className="hidden sm:inline">Retrait</span>
             </TabsTrigger>
             <TabsTrigger value="institutions" className="flex items-center gap-2">
               <Building2 size={16} />
@@ -264,7 +360,7 @@ const FounderDashboard: React.FC = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="balance" className="space-y-6">
+          <TabsContent value="retrait" className="space-y-6">
             <BalanceCard
               currentBalance={balance.current_balance}
               totalInscriptions={balance.total_inscriptions}
@@ -287,6 +383,8 @@ const FounderDashboard: React.FC = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <BottomNavigation />
     </div>
   );
 };
