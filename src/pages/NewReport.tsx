@@ -132,11 +132,15 @@ const NewReport: React.FC = () => {
           throw new Error('Erreur lors de l\'upload de la photo');
         }
 
-        const { data: { publicUrl } } = supabase.storage
+        const { data: signedData, error: signError } = await supabase.storage
           .from('signalements-photos')
-          .getPublicUrl(fileName);
+          .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year expiry
         
-        photoUrl = publicUrl;
+        if (signError || !signedData?.signedUrl) {
+          throw new Error('Erreur lors de la génération de l\'URL de la photo');
+        }
+        
+        photoUrl = signedData.signedUrl;
       }
 
       // Create signalement
