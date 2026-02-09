@@ -60,13 +60,16 @@
  
        if (uploadError) throw uploadError;
  
-       // Get public URL
-       const { data: { publicUrl } } = supabase.storage
+       // Get signed URL (private bucket)
+       const { data: signedData, error: signError } = await supabase.storage
          .from('avatars')
-         .getPublicUrl(fileName);
+         .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year expiry
  
-       // Add cache buster to force refresh
-       const urlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
+       if (signError || !signedData?.signedUrl) {
+         throw new Error('Erreur lors de la génération de l\'URL');
+       }
+ 
+       const urlWithCacheBuster = `${signedData.signedUrl}&t=${Date.now()}`;
  
        // Update profile in database
        const success = await updateProfile({ avatar_url: urlWithCacheBuster } as any);
