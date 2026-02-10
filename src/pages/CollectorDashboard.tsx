@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SignedImage from '@/components/ui/SignedImage';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -228,8 +229,9 @@ const CollectorDashboard: React.FC = () => {
                 <div key={sig.id} className="border rounded-lg overflow-hidden">
                   <div className="flex gap-3 p-3">
                     {sig.photo_url && (
-                      <img 
-                        src={sig.photo_url} 
+                      <SignedImage 
+                        bucket="signalements-photos"
+                        path={sig.photo_url}
                         alt="Signalement"
                         className="w-20 h-20 object-cover rounded-lg shrink-0"
                       />

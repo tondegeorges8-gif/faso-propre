@@ -122,25 +122,18 @@ const NewReport: React.FC = () => {
       // Upload photo to storage
       if (photoFile) {
         const fileExt = photoFile.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
         
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('signalements-photos')
           .upload(fileName, photoFile);
 
         if (uploadError) {
           throw new Error('Erreur lors de l\'upload de la photo');
         }
-
-        const { data: signedData, error: signError } = await supabase.storage
-          .from('signalements-photos')
-          .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year expiry
         
-        if (signError || !signedData?.signedUrl) {
-          throw new Error('Erreur lors de la génération de l\'URL de la photo');
-        }
-        
-        photoUrl = signedData.signedUrl;
+        // Store the file path, not a signed URL — URLs are generated on-demand
+        photoUrl = fileName;
       }
 
       // Create signalement

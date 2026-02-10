@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SignedImage from '@/components/ui/SignedImage';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -324,8 +325,9 @@ const Dashboard: React.FC = () => {
                     className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
                   >
                     {report.photo_url && (
-                      <img 
-                        src={report.photo_url} 
+                      <SignedImage 
+                        bucket="signalements-photos"
+                        path={report.photo_url}
                         alt="Report" 
                         className="w-12 h-12 rounded-lg object-cover"
                       />

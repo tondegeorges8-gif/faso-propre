@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SignedImage from '@/components/ui/SignedImage';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -227,8 +228,9 @@ const Reports: React.FC = () => {
                     {/* Photo */}
                     {sig.photo_url && (
                       <div className="w-28 shrink-0">
-                        <img 
-                          src={sig.photo_url} 
+                        <SignedImage 
+                          bucket="signalements-photos"
+                          path={sig.photo_url}
                           alt="Signalement"
                           className="w-full h-full object-cover"
                         />

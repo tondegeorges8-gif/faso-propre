@@ -5,6 +5,7 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useToast } from '@/hooks/use-toast';
  import { useAuth } from '@/contexts/AuthContext';
+ import { useSignedUrl } from '@/hooks/useSignedUrl';
  
  interface ProfilePhotoUploadProps {
    currentAvatarUrl?: string | null;
@@ -18,7 +19,8 @@
    onUploadComplete
  }) => {
    const [isUploading, setIsUploading] = useState(false);
-   const [avatarUrl, setAvatarUrl] = useState<string | null>(currentAvatarUrl || null);
+   const [avatarPath, setAvatarPath] = useState<string | null>(currentAvatarUrl || null);
+   const resolvedAvatarUrl = useSignedUrl('avatars', avatarPath);
    const fileInputRef = useRef<HTMLInputElement>(null);
    const { toast } = useToast();
    const { user, updateProfile } = useAuth();
@@ -60,23 +62,15 @@
  
        if (uploadError) throw uploadError;
  
-       // Get signed URL (private bucket)
-       const { data: signedData, error: signError } = await supabase.storage
-         .from('avatars')
-         .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year expiry
- 
-       if (signError || !signedData?.signedUrl) {
-         throw new Error('Erreur lors de la génération de l\'URL');
-       }
- 
-       const urlWithCacheBuster = `${signedData.signedUrl}&t=${Date.now()}`;
+       // Store the file path — signed URLs are generated on-demand
+       const avatarPath = fileName;
  
        // Update profile in database
-       const success = await updateProfile({ avatar_url: urlWithCacheBuster } as any);
+       const success = await updateProfile({ avatar_url: avatarPath } as any);
  
        if (success) {
-         setAvatarUrl(urlWithCacheBuster);
-         onUploadComplete?.(urlWithCacheBuster);
+          setAvatarPath(avatarPath);
+          onUploadComplete?.(avatarPath);
          toast({
            title: 'Photo mise à jour',
            description: 'Votre photo de profil a été modifiée avec succès',
@@ -101,7 +95,7 @@
    return (
      <div className="relative inline-block">
        <Avatar className="w-20 h-20 border-4 border-primary/20 cursor-pointer" onClick={handleClick}>
-         <AvatarImage src={avatarUrl || undefined} alt="Photo de profil" />
+         <AvatarImage src={resolvedAvatarUrl || undefined} alt="Photo de profil" />
          <AvatarFallback className="bg-primary text-primary-foreground text-xl">
            {initials}
          </AvatarFallback>
