@@ -1,4 +1,5 @@
  import React, { useState, useEffect } from 'react';
+ import SignedImage from '@/components/ui/SignedImage';
  import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
  import { Badge } from '@/components/ui/badge';
  import { Button } from '@/components/ui/button';
@@ -202,13 +203,14 @@
              <Card key={signalement.id} className="shadow-card">
                <CardContent className="pt-4 pb-4">
                  <div className="flex gap-4">
-                   {signalement.photo_url && (
-                     <img 
-                       src={signalement.photo_url} 
-                       alt="Signalement" 
-                       className="w-24 h-24 rounded-lg object-cover"
-                     />
-                   )}
+                    {signalement.photo_url && (
+                      <SignedImage 
+                        bucket="signalements-photos"
+                        path={signalement.photo_url}
+                        alt="Signalement" 
+                        className="w-24 h-24 rounded-lg object-cover"
+                      />
+                    )}
                    <div className="flex-1 space-y-2">
                      <div className="flex items-start justify-between">
                        <div>
