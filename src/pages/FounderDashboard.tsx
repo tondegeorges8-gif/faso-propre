@@ -10,7 +10,6 @@ import BalanceCard from '@/components/founder/BalanceCard';
 import WithdrawalForm from '@/components/founder/WithdrawalForm';
 import TransactionHistory from '@/components/founder/TransactionHistory';
 import InstitutionStats from '@/components/founder/InstitutionStats';
-import FounderLockScreen from '@/components/founder/FounderLockScreen';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import { 
   ArrowLeft, 
@@ -58,10 +57,6 @@ const FounderDashboard: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { isFounder, isLoading: founderLoading } = useFounderAccess();
   
-  // Écran de verrouillage
-  const [isUnlocked, setIsUnlocked] = useState(() => {
-    return sessionStorage.getItem('founder_access') === 'granted';
-  });
   
   const [balance, setBalance] = useState<FounderBalance>({
     current_balance: 0,
@@ -87,10 +82,10 @@ const FounderDashboard: React.FC = () => {
   }, [user, isLoading, navigate]);
 
   useEffect(() => {
-    if (!isLoading && user && isFounder && isUnlocked) {
+    if (!isLoading && user && isFounder) {
       fetchFounderData();
     }
-  }, [user, isFounder, isLoading, isUnlocked]);
+  }, [user, isFounder, isLoading]);
 
   const fetchFounderData = async () => {
     try {
@@ -238,11 +233,6 @@ const FounderDashboard: React.FC = () => {
         </div>
       </div>
     );
-  }
-
-  // Écran de verrouillage
-  if (!isUnlocked) {
-    return <FounderLockScreen onUnlock={() => setIsUnlocked(true)} />;
   }
 
   if (loading) {
