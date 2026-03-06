@@ -239,14 +239,8 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Loyalty Points & Sponsor Banner */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <LoyaltyPointsCard 
-            compact 
-            onViewRewards={() => navigate('/loyalty')} 
-          />
-          <SponsorBanner variant="inline" />
-        </div>
+        {/* Sponsor Banner */}
+        <SponsorBanner variant="inline" />
 
         {/* Collector Access */}
         <Card className="shadow-card border-secondary/50">
