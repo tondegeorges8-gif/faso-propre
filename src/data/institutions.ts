@@ -53,7 +53,7 @@ export const INSTITUTIONS: Record<string, Institution> = {
   },
   ANASUR: {
     id: "ANASUR",
-    nom: "ANASUR",
+    nom: "UNASER",
     options: [
       "Bac à ordure débordé",
       "Dépôt de déchets sauvage",
