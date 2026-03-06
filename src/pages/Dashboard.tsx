@@ -81,10 +81,6 @@ const Dashboard: React.FC = () => {
     navigate('/');
   };
 
-  const handlePayment = (signalementId: string, amount: number) => {
-    // Placeholder for Orange Money / Moov Money integration
-    alert(`Paiement de ${amount} FCFA via Orange Money / Moov Money\n\nCette fonctionnalité sera bientôt disponible.`);
-  };
 
   const getStatusBadge = (status: string) => {
     const statusInfo = REPORT_STATUSES[status as keyof typeof REPORT_STATUSES];
