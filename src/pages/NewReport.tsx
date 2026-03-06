@@ -295,45 +295,6 @@ const NewReport: React.FC = () => {
                 <CitySelector value={ville} onChange={setVille} />
               </div>
 
-              {/* Manual Input Fields */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Arrondissement</Label>
-                  <Input
-                    placeholder="Ex: Arrondissement 1"
-                    value={arrondissement}
-                    onChange={(e) => setArrondissement(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Secteur</Label>
-                  <Input
-                    placeholder="Ex: Secteur 15"
-                    value={secteur}
-                    onChange={(e) => setSecteur(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Quartier</Label>
-                  <Input
-                    placeholder="Ex: Patte d'Oie"
-                    value={quartier}
-                    onChange={(e) => setQuartier(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Sous-quartier</Label>
-                  <Input
-                    placeholder="Ex: Zone A"
-                    value={sousQuartier}
-                    onChange={(e) => setSousQuartier(e.target.value)}
-                  />
-                </div>
-              </div>
-
               {/* GPS Capture */}
               <div className="pt-2 border-t">
                 <Label className="mb-3 block">Position GPS</Label>
