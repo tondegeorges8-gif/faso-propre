@@ -317,19 +317,15 @@ const NewReport: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Location Section */}
+          {/* Location - City & GPS only */}
           <Card className="shadow-card animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <MapPin size={20} className="text-primary" />
-                Localisation précise
+                Position GPS
               </CardTitle>
-              <CardDescription>
-                Plus vous êtes précis, plus vite nous interviendrons
-              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* City Selector with Search */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
                   <Building2 size={14} />
@@ -338,15 +334,11 @@ const NewReport: React.FC = () => {
                 <CitySelector value={ville} onChange={setVille} />
               </div>
 
-              {/* GPS Capture */}
-              <div className="pt-2 border-t">
-                <Label className="mb-3 block">Position GPS</Label>
-                <GPSCapture
-                  latitude={latitude}
-                  longitude={longitude}
-                  onCapture={handleGPSCapture}
-                />
-              </div>
+              <GPSCapture
+                latitude={latitude}
+                longitude={longitude}
+                onCapture={handleGPSCapture}
+              />
             </CardContent>
           </Card>
 
