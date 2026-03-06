@@ -20,7 +20,11 @@ import {
   Trash2,
   HelpCircle,
   MapPin,
-  Building2
+  Building2,
+  Mic,
+  Square,
+  Play,
+  X
 } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 
