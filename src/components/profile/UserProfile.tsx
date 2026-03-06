@@ -83,15 +83,7 @@
            <CardTitle className="text-lg">Actions</CardTitle>
          </CardHeader>
          <CardContent className="space-y-3">
-           <Button 
-             variant="outline" 
-             className="w-full justify-start"
-             onClick={() => navigate('/loyalty')}
-           >
-             <Star size={18} className="mr-2 text-yellow-500" />
-             Mes points de fidélité
-           </Button>
-           <Button 
+            <Button 
              variant="outline" 
              className="w-full justify-start"
              onClick={() => navigate('/settings')}
