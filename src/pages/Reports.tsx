@@ -11,7 +11,6 @@ import {
   ArrowLeft, 
   MapPin,
   Calendar,
-  CreditCard,
   Filter
 } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';

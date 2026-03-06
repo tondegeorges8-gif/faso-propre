@@ -3,7 +3,7 @@
  import { Button } from '@/components/ui/button';
  import { useAuth } from '@/contexts/AuthContext';
  import ProfilePhotoUpload from './ProfilePhotoUpload';
- import { Phone, Mail, Calendar, Edit, Star } from 'lucide-react';
+ import { Phone, Mail, Calendar, Edit } from 'lucide-react';
  import { useNavigate } from 'react-router-dom';
  
  interface UserProfileProps {

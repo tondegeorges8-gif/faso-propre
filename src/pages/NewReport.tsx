@@ -379,6 +379,47 @@ const NewReport: React.FC = () => {
                   {description.length}/500
                 </p>
               </div>
+
+              {/* Audio Recording */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1">
+                  <Mic size={14} />
+                  Message audio (optionnel)
+                </Label>
+                {audioUrl ? (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                    <audio src={audioUrl} controls className="flex-1 h-8" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        setAudioBlob(null);
+                        setAudioUrl(null);
+                      }}
+                    >
+                      <X size={16} />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant={isRecording ? 'destructive' : 'outline'}
+                      className={`h-16 w-16 rounded-full ${isRecording ? 'animate-pulse' : ''}`}
+                      onClick={isRecording ? stopRecording : startRecording}
+                    >
+                      {isRecording ? <Square size={24} /> : <Mic size={24} />}
+                    </Button>
+                  </div>
+                )}
+                {isRecording && (
+                  <p className="text-xs text-center text-destructive font-medium">
+                    🔴 Enregistrement en cours... Appuyez pour arrêter
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
