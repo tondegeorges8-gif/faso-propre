@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { INSTITUTIONS, REPORT_STATUSES } from '@/data/institutions';
 import { useFounderAccess } from '@/hooks/useFounderAccess';
 import { supabase } from '@/integrations/supabase/client';
-import LoyaltyPointsCard from '@/components/loyalty/LoyaltyPointsCard';
+
 import SponsorBanner from '@/components/sponsors/SponsorBanner';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload';
