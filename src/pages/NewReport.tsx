@@ -39,15 +39,16 @@ const NewReport: React.FC = () => {
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
   const [ville, setVille] = useState('');
-  const [arrondissement, setArrondissement] = useState('');
-  const [secteur, setSecteur] = useState('');
-  const [quartier, setQuartier] = useState('');
-  const [sousQuartier, setSousQuartier] = useState('');
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
