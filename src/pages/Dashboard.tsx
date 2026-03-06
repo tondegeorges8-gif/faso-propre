@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { INSTITUTIONS, REPORT_STATUSES } from '@/data/institutions';
 import { useFounderAccess } from '@/hooks/useFounderAccess';
 import { supabase } from '@/integrations/supabase/client';
-import LoyaltyPointsCard from '@/components/loyalty/LoyaltyPointsCard';
+
 import SponsorBanner from '@/components/sponsors/SponsorBanner';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload';
@@ -19,7 +19,6 @@ import {
   Clock,
   Phone,
   Truck,
-  CreditCard,
   Crown,
 } from 'lucide-react';
 
@@ -81,10 +80,6 @@ const Dashboard: React.FC = () => {
     navigate('/');
   };
 
-  const handlePayment = (signalementId: string, amount: number) => {
-    // Placeholder for Orange Money / Moov Money integration
-    alert(`Paiement de ${amount} FCFA via Orange Money / Moov Money\n\nCette fonctionnalité sera bientôt disponible.`);
-  };
 
   const getStatusBadge = (status: string) => {
     const statusInfo = REPORT_STATUSES[status as keyof typeof REPORT_STATUSES];
@@ -239,14 +234,8 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Loyalty Points & Sponsor Banner */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <LoyaltyPointsCard 
-            compact 
-            onViewRewards={() => navigate('/loyalty')} 
-          />
-          <SponsorBanner variant="inline" />
-        </div>
+        {/* Sponsor Banner */}
+        <SponsorBanner variant="inline" />
 
         {/* Collector Access */}
         <Card className="shadow-card border-secondary/50">
@@ -340,20 +329,7 @@ const Dashboard: React.FC = () => {
                         {report.ville}{report.quartier ? `, ${report.quartier}` : ''}
                       </p>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      {getStatusBadge(report.status)}
-                      {report.statut_paiement === 'en_attente' && report.montant_total > 0 && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs h-7 border-primary text-primary"
-                          onClick={() => handlePayment(report.id, report.montant_total)}
-                        >
-                          <CreditCard size={12} className="mr-1" />
-                          Payer
-                        </Button>
-                      )}
-                    </div>
+                    {getStatusBadge(report.status)}
                   </div>
                 );
               })}

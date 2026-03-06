@@ -20,7 +20,11 @@ import {
   Trash2,
   HelpCircle,
   MapPin,
-  Building2
+  Building2,
+  Mic,
+  Square,
+  Play,
+  X
 } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 
@@ -39,15 +43,16 @@ const NewReport: React.FC = () => {
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
   const [ville, setVille] = useState('');
-  const [arrondissement, setArrondissement] = useState('');
-  const [secteur, setSecteur] = useState('');
-  const [quartier, setQuartier] = useState('');
-  const [sousQuartier, setSousQuartier] = useState('');
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -61,6 +66,45 @@ const NewReport: React.FC = () => {
       setShowOnboarding(true);
     }
   }, []);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        setAudioUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible d'accéder au microphone. Vérifiez les permissions.",
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
 
   const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -147,10 +191,10 @@ const NewReport: React.FC = () => {
           category,
           subcategory,
           ville,
-          arrondissement: arrondissement || null,
-          secteur: secteur || null,
-          quartier: quartier || null,
-          sous_quartier: sousQuartier || null,
+          arrondissement: null,
+          secteur: null,
+          quartier: null,
+          sous_quartier: null,
           description: description || null,
           photo_url: photoUrl,
           latitude: latitude,
@@ -294,45 +338,6 @@ const NewReport: React.FC = () => {
                 <CitySelector value={ville} onChange={setVille} />
               </div>
 
-              {/* Manual Input Fields */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Arrondissement</Label>
-                  <Input
-                    placeholder="Ex: Arrondissement 1"
-                    value={arrondissement}
-                    onChange={(e) => setArrondissement(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Secteur</Label>
-                  <Input
-                    placeholder="Ex: Secteur 15"
-                    value={secteur}
-                    onChange={(e) => setSecteur(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Quartier</Label>
-                  <Input
-                    placeholder="Ex: Patte d'Oie"
-                    value={quartier}
-                    onChange={(e) => setQuartier(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Sous-quartier</Label>
-                  <Input
-                    placeholder="Ex: Zone A"
-                    value={sousQuartier}
-                    onChange={(e) => setSousQuartier(e.target.value)}
-                  />
-                </div>
-              </div>
-
               {/* GPS Capture */}
               <div className="pt-2 border-t">
                 <Label className="mb-3 block">Position GPS</Label>
@@ -412,6 +417,47 @@ const NewReport: React.FC = () => {
                 <p className="text-xs text-muted-foreground text-right">
                   {description.length}/500
                 </p>
+              </div>
+
+              {/* Audio Recording */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1">
+                  <Mic size={14} />
+                  Message audio (optionnel)
+                </Label>
+                {audioUrl ? (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                    <audio src={audioUrl} controls className="flex-1 h-8" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        setAudioBlob(null);
+                        setAudioUrl(null);
+                      }}
+                    >
+                      <X size={16} />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant={isRecording ? 'destructive' : 'outline'}
+                      className={`h-16 w-16 rounded-full ${isRecording ? 'animate-pulse' : ''}`}
+                      onClick={isRecording ? stopRecording : startRecording}
+                    >
+                      {isRecording ? <Square size={24} /> : <Mic size={24} />}
+                    </Button>
+                  </div>
+                )}
+                {isRecording && (
+                  <p className="text-xs text-center text-destructive font-medium">
+                    🔴 Enregistrement en cours... Appuyez pour arrêter
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>

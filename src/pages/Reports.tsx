@@ -11,7 +11,6 @@ import {
   ArrowLeft, 
   MapPin,
   Calendar,
-  CreditCard,
   Filter
 } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
@@ -264,40 +263,21 @@ const Reports: React.FC = () => {
                           {formatDate(sig.created_at)}
                         </p>
                         
-                        <div className="flex items-center gap-2">
-                          {sig.latitude && sig.longitude && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 px-2"
-                              onClick={() => {
-                                window.open(
-                                  `https://www.google.com/maps?q=${sig.latitude},${sig.longitude}`,
-                                  '_blank'
-                                );
-                              }}
-                            >
-                              <MapPin size={14} />
-                            </Button>
-                          )}
-                          
-                          {sig.statut_paiement === 'en_attente' && (
-                            <Button
-                              size="sm"
-                              className="h-8"
-                              onClick={() => handlePayment(sig.id, 5000)}
-                            >
-                              <CreditCard size={14} className="mr-1" />
-                              Payer l'enlèvement
-                            </Button>
-                          )}
-                          
-                          {sig.statut_paiement === 'paye' && (
-                            <Badge variant="outline" className="bg-primary/10 text-primary">
-                              ✓ Payé
-                            </Badge>
-                          )}
-                        </div>
+                        {sig.latitude && sig.longitude && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2"
+                            onClick={() => {
+                              window.open(
+                                `https://www.google.com/maps?q=${sig.latitude},${sig.longitude}`,
+                                '_blank'
+                              );
+                            }}
+                          >
+                            <MapPin size={14} />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
