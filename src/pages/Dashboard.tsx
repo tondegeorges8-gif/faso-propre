@@ -19,7 +19,6 @@ import {
   Clock,
   Phone,
   Truck,
-  CreditCard,
   Crown,
 } from 'lucide-react';
 
