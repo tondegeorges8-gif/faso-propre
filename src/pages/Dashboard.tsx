@@ -334,20 +334,7 @@ const Dashboard: React.FC = () => {
                         {report.ville}{report.quartier ? `, ${report.quartier}` : ''}
                       </p>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      {getStatusBadge(report.status)}
-                      {report.statut_paiement === 'en_attente' && report.montant_total > 0 && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs h-7 border-primary text-primary"
-                          onClick={() => handlePayment(report.id, report.montant_total)}
-                        >
-                          <CreditCard size={12} className="mr-1" />
-                          Payer
-                        </Button>
-                      )}
-                    </div>
+                    {getStatusBadge(report.status)}
                   </div>
                 );
               })}
