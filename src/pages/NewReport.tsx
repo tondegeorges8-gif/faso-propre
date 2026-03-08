@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { INSTITUTIONS } from '@/data/institutions';
-import CitySelector from '@/components/location/CitySelector';
 import GPSCapture from '@/components/location/GPSCapture';
 import OnboardingGuide from '@/components/onboarding/OnboardingGuide';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,11 +17,8 @@ import {
   Send,
   Trash2,
   HelpCircle,
-  MapPin,
-  Building2,
   Mic,
   Square,
-  Play,
   X
 } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
@@ -42,7 +37,6 @@ const NewReport: React.FC = () => {
   // Form state
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
-  const [ville, setVille] = useState('');
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -110,7 +104,6 @@ const NewReport: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: 'Fichier trop volumineux',
@@ -149,7 +142,7 @@ const NewReport: React.FC = () => {
       return;
     }
 
-    if (!category || !subcategory || !ville || !photo) {
+    if (!category || !subcategory || !photo) {
       toast({
         title: 'Champs obligatoires',
         description: 'Veuillez remplir tous les champs obligatoires et ajouter une photo',
@@ -162,6 +155,7 @@ const NewReport: React.FC = () => {
 
     try {
       let photoUrl = '';
+      let audioStorageUrl: string | null = null;
 
       // Upload photo to storage
       if (photoFile) {
@@ -175,12 +169,24 @@ const NewReport: React.FC = () => {
         if (uploadError) {
           throw new Error('Erreur lors de l\'upload de la photo');
         }
-        
-        // Store the file path, not a signed URL — URLs are generated on-demand
         photoUrl = fileName;
       }
 
-      // Create signalement
+      // Upload audio to storage
+      if (audioBlob) {
+        const audioFileName = `${user.id}/${crypto.randomUUID()}.webm`;
+        
+        const { error: audioUploadError } = await supabase.storage
+          .from('signalements-audio')
+          .upload(audioFileName, audioBlob, { contentType: 'audio/webm' });
+
+        if (audioUploadError) {
+          console.error('Audio upload error:', audioUploadError);
+        } else {
+          audioStorageUrl = audioFileName;
+        }
+      }
+
       const nomComplet = `${profile.prenoms} ${profile.nom}`;
       
       const { error } = await supabase
@@ -190,20 +196,21 @@ const NewReport: React.FC = () => {
           nom_complet: nomComplet,
           category,
           subcategory,
-          ville,
+          ville: 'Non spécifiée',
           arrondissement: null,
           secteur: null,
           quartier: null,
           sous_quartier: null,
           description: description || null,
           photo_url: photoUrl,
-          latitude: latitude,
-          longitude: longitude,
+          audio_url: audioStorageUrl,
+          latitude,
+          longitude,
           status: 'PENDING',
           statut_paiement: 'en_attente',
           montant_total: 0,
           commission_montant: 0,
-        });
+        } as any);
 
       if (error) {
         throw error;
@@ -317,23 +324,13 @@ const NewReport: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Location - City & GPS only */}
+          {/* GPS Position */}
           <Card className="shadow-card animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MapPin size={20} className="text-primary" />
-                Position GPS
-              </CardTitle>
+              <CardTitle className="text-lg">Ma position actuelle</CardTitle>
+              <CardDescription>Capturez votre position GPS</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1">
-                  <Building2 size={14} />
-                  Ville / Commune *
-                </Label>
-                <CitySelector value={ville} onChange={setVille} />
-              </div>
-
+            <CardContent>
               <GPSCapture
                 latitude={latitude}
                 longitude={longitude}
@@ -459,7 +456,7 @@ const NewReport: React.FC = () => {
             type="submit"
             size="lg"
             className="w-full bg-primary hover:bg-primary/90"
-            disabled={isSubmitting || !category || !subcategory || !ville || !photo}
+            disabled={isSubmitting || !category || !subcategory || !photo}
           >
             {isSubmitting ? (
               <span className="flex items-center gap-2">
@@ -478,7 +475,6 @@ const NewReport: React.FC = () => {
 
       <BottomNavigation />
 
-      {/* Onboarding Guide */}
       <OnboardingGuide 
         open={showOnboarding} 
         onOpenChange={(open) => {

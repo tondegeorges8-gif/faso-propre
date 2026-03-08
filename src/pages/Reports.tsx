@@ -2,16 +2,21 @@ import React, { useState, useEffect } from 'react';
 import SignedImage from '@/components/ui/SignedImage';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { REPORT_CATEGORIES, REPORT_STATUSES } from '@/data/burkinaFaso';
+import { INSTITUTIONS, REPORT_STATUSES } from '@/data/institutions';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { 
   ArrowLeft, 
   MapPin,
   Calendar,
-  Filter
+  Filter,
+  Trash2,
+  Mic,
+  ExternalLink
 } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 
@@ -19,6 +24,7 @@ const logo = '/logo.png';
 
 interface Signalement {
   id: string;
+  user_id: string;
   category: string;
   subcategory: string;
   ville: string;
@@ -27,19 +33,26 @@ interface Signalement {
   quartier: string | null;
   sous_quartier: string | null;
   photo_url: string | null;
+  audio_url: string | null;
   description: string | null;
   status: string;
-  statut_paiement: string;
-  montant_total: number;
-  commission_montant: number;
   created_at: string;
   latitude: number | null;
   longitude: number | null;
+  nom_complet: string;
 }
+
+// Component to play audio from signed URL
+const AudioPlayer: React.FC<{ path: string }> = ({ path }) => {
+  const url = useSignedUrl('signalements-audio', path);
+  if (!url) return null;
+  return <audio src={url} controls className="w-full h-8" />;
+};
 
 const Reports: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [signalements, setSignalements] = useState<Signalement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
@@ -54,6 +67,41 @@ const Reports: React.FC = () => {
     if (user) {
       fetchSignalements();
     }
+  }, [user]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('signalements-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'signalements',
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newSig = payload.new as Signalement;
+            if (newSig.user_id === user.id) {
+              setSignalements(prev => [newSig, ...prev]);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            setSignalements(prev =>
+              prev.map(s => s.id === (payload.new as any).id ? { ...s, ...payload.new } as Signalement : s)
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setSignalements(prev => prev.filter(s => s.id !== (payload.old as any).id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchSignalements = async () => {
@@ -75,9 +123,37 @@ const Reports: React.FC = () => {
     }
   };
 
-  const handlePayment = (signalementId: string, amount: number) => {
-    // Placeholder for Orange Money / Moov Money integration
-    alert(`Paiement de ${amount} FCFA via Orange Money / Moov Money\n\nCommission plateforme (10%): ${(amount * 0.1).toFixed(0)} FCFA\nMontant collecteur: ${(amount * 0.9).toFixed(0)} FCFA\n\nCette fonctionnalité sera bientôt disponible.`);
+  const handleDelete = async (sig: Signalement) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce signalement ?')) return;
+
+    try {
+      // Delete photo from storage
+      if (sig.photo_url) {
+        await supabase.storage.from('signalements-photos').remove([sig.photo_url]);
+      }
+      // Delete audio from storage
+      if (sig.audio_url) {
+        await supabase.storage.from('signalements-audio').remove([sig.audio_url]);
+      }
+
+      const { error } = await supabase
+        .from('signalements')
+        .delete()
+        .eq('id', sig.id)
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+
+      setSignalements(prev => prev.filter(s => s.id !== sig.id));
+      toast({ title: 'Signalement supprimé' });
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer ce signalement',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -87,7 +163,6 @@ const Reports: React.FC = () => {
     return (
       <Badge 
         variant="outline" 
-        className={`bg-${statusInfo.color}/10 text-${statusInfo.color} border-${statusInfo.color}/30`}
         style={{ 
           backgroundColor: `hsl(var(--${statusInfo.color}) / 0.1)`,
           color: `hsl(var(--${statusInfo.color}))`,
@@ -111,8 +186,6 @@ const Reports: React.FC = () => {
 
   const formatLocation = (sig: Signalement) => {
     const parts = [sig.ville];
-    if (sig.arrondissement) parts.push(sig.arrondissement);
-    if (sig.secteur) parts.push(sig.secteur);
     if (sig.quartier) parts.push(sig.quartier);
     if (sig.sous_quartier) parts.push(sig.sous_quartier);
     return parts.join(' → ');
@@ -219,68 +292,99 @@ const Reports: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {filteredSignalements.map((sig) => {
-              const category = REPORT_CATEGORIES[sig.category as keyof typeof REPORT_CATEGORIES];
+              const institution = INSTITUTIONS[sig.category as keyof typeof INSTITUTIONS];
               
               return (
                 <Card key={sig.id} className="shadow-card overflow-hidden">
-                  <div className="flex">
-                    {/* Photo */}
-                    {sig.photo_url && (
-                      <div className="w-28 shrink-0">
-                        <SignedImage 
-                          bucket="signalements-photos"
-                          path={sig.photo_url}
-                          alt="Signalement"
-                          className="w-full h-full object-cover"
-                        />
+                  {/* Photo */}
+                  {sig.photo_url && (
+                    <div className="w-full h-48">
+                      <SignedImage 
+                        bucket="signalements-photos"
+                        path={sig.photo_url}
+                        alt="Signalement"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  
+                  <CardContent className="p-4 space-y-3">
+                    {/* Header: category + status */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold">
+                          {institution?.icon} {sig.subcategory}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {institution?.nom}
+                        </p>
+                      </div>
+                      {getStatusBadge(sig.status)}
+                    </div>
+
+                    {/* Location details */}
+                    <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                      <p className="text-sm font-medium flex items-center gap-1">
+                        <MapPin size={14} className="text-primary" />
+                        Localisation
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatLocation(sig)}
+                      </p>
+                      {sig.latitude && sig.longitude && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-xs text-primary"
+                          onClick={() => {
+                            window.open(
+                              `https://www.google.com/maps?q=${sig.latitude},${sig.longitude}`,
+                              '_blank'
+                            );
+                          }}
+                        >
+                          <ExternalLink size={12} className="mr-1" />
+                          Voir sur la carte
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Description */}
+                    {sig.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {sig.description}
+                      </p>
+                    )}
+
+                    {/* Audio playback */}
+                    {sig.audio_url && (
+                      <div className="p-3 rounded-lg bg-muted/50">
+                        <p className="text-xs font-medium flex items-center gap-1 mb-2">
+                          <Mic size={12} className="text-primary" />
+                          Message audio
+                        </p>
+                        <AudioPlayer path={sig.audio_url} />
                       </div>
                     )}
                     
-                    {/* Content */}
-                    <div className="flex-1 p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="font-medium">
-                            {category?.icon} {sig.subcategory}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                            <MapPin size={12} />
-                            {formatLocation(sig)}
-                          </p>
-                        </div>
-                        {getStatusBadge(sig.status)}
-                      </div>
+                    {/* Footer: date + actions */}
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Calendar size={12} />
+                        {formatDate(sig.created_at)}
+                      </p>
                       
-                      {sig.description && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                          {sig.description}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Calendar size={12} />
-                          {formatDate(sig.created_at)}
-                        </p>
-                        
-                        {sig.latitude && sig.longitude && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 px-2"
-                            onClick={() => {
-                              window.open(
-                                `https://www.google.com/maps?q=${sig.latitude},${sig.longitude}`,
-                                '_blank'
-                              );
-                            }}
-                          >
-                            <MapPin size={14} />
-                          </Button>
-                        )}
-                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDelete(sig)}
+                      >
+                        <Trash2 size={14} className="mr-1" />
+                        Supprimer
+                      </Button>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
               );
             })}

@@ -18,7 +18,6 @@ import {
   LogOut, 
   Clock,
   Phone,
-  Truck,
   Crown,
 } from 'lucide-react';
 
@@ -80,7 +79,6 @@ const Dashboard: React.FC = () => {
     navigate('/');
   };
 
-
   const getStatusBadge = (status: string) => {
     const statusInfo = REPORT_STATUSES[status as keyof typeof REPORT_STATUSES];
     if (!statusInfo) return null;
@@ -88,7 +86,6 @@ const Dashboard: React.FC = () => {
     return (
       <Badge 
         variant="outline" 
-        className={`bg-${statusInfo.color}/10 text-${statusInfo.color} border-${statusInfo.color}/30`}
         style={{ 
           backgroundColor: `hsl(var(--${statusInfo.color}) / 0.1)`,
           color: `hsl(var(--${statusInfo.color}))`,
@@ -237,23 +234,10 @@ const Dashboard: React.FC = () => {
         {/* Sponsor Banner */}
         <SponsorBanner variant="inline" />
 
-        {/* Collector Access */}
-        <Card className="shadow-card border-secondary/50">
-          <CardContent className="pt-4 pb-4 space-y-3">
-            <Button
-              variant="outline"
-              className="w-full h-auto py-4 border-secondary text-secondary-foreground hover:bg-secondary/10"
-              onClick={() => navigate('/collector')}
-            >
-              <Truck size={24} className="mr-2" />
-              <div className="text-left">
-                <p className="font-medium">Espace Prestataire</p>
-                <p className="text-xs opacity-70">Gérer les missions de collecte</p>
-              </div>
-            </Button>
-
-            {/* Founder Access - Only visible to founders */}
-            {isFounder && (
+        {/* Founder Access - Only visible to founders */}
+        {isFounder && (
+          <Card className="shadow-card border-primary/50">
+            <CardContent className="pt-4 pb-4">
               <Button
                 variant="outline"
                 className="w-full h-auto py-4 border-primary text-primary hover:bg-primary/10"
@@ -265,9 +249,9 @@ const Dashboard: React.FC = () => {
                   <p className="text-xs opacity-70">Tableau de bord administratif</p>
                 </div>
               </Button>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Emergency Contacts */}
         <Card className="shadow-card">
