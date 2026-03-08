@@ -184,6 +184,7 @@ export type Database = {
       signalements: {
         Row: {
           arrondissement: string | null
+          audio_url: string | null
           category: string
           commission_montant: number | null
           created_at: string
@@ -206,6 +207,7 @@ export type Database = {
         }
         Insert: {
           arrondissement?: string | null
+          audio_url?: string | null
           category: string
           commission_montant?: number | null
           created_at?: string
@@ -228,6 +230,7 @@ export type Database = {
         }
         Update: {
           arrondissement?: string | null
+          audio_url?: string | null
           category?: string
           commission_montant?: number | null
           created_at?: string
