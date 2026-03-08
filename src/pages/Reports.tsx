@@ -24,6 +24,7 @@ const logo = '/logo.png';
 
 interface Signalement {
   id: string;
+  user_id: string;
   category: string;
   subcategory: string;
   ville: string;
