@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import ProfilePhotoUpload from './ProfilePhotoUpload';
 import AIAssistant from './AIAssistant';
+import BurkinaCleanlinessMap from '@/components/map/BurkinaCleanlinessMap';
 import { Phone, Mail, Calendar, Edit } from 'lucide-react';
  import { useNavigate } from 'react-router-dom';
  
