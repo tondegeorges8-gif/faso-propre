@@ -1,9 +1,10 @@
- import React from 'react';
- import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
- import { Button } from '@/components/ui/button';
- import { useAuth } from '@/contexts/AuthContext';
- import ProfilePhotoUpload from './ProfilePhotoUpload';
- import { Phone, Mail, Calendar, Edit } from 'lucide-react';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import ProfilePhotoUpload from './ProfilePhotoUpload';
+import AIAssistant from './AIAssistant';
+import { Phone, Mail, Calendar, Edit } from 'lucide-react';
  import { useNavigate } from 'react-router-dom';
  
  interface UserProfileProps {
@@ -90,10 +91,13 @@
            >
              <Edit size={18} className="mr-2" />
              Modifier mon profil
-           </Button>
-         </CardContent>
-       </Card>
-     </div>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* AI Assistant */}
+        <AIAssistant />
+      </div>
    );
  };
  
