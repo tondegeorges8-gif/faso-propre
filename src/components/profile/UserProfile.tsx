@@ -91,10 +91,13 @@ import { Phone, Mail, Calendar, Edit } from 'lucide-react';
            >
              <Edit size={18} className="mr-2" />
              Modifier mon profil
-           </Button>
-         </CardContent>
-       </Card>
-     </div>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* AI Assistant */}
+        <AIAssistant />
+      </div>
    );
  };
  
