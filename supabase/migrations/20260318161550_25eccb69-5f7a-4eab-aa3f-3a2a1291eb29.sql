@@ -1,0 +1,1 @@
+DELETE FROM sponsor_ads WHERE id = '0c0e9d8c-5d9b-455e-95e9-83e3577e11f3';
