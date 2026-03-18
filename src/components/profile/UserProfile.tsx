@@ -95,8 +95,8 @@ import { Phone, Mail, Calendar, Edit } from 'lucide-react';
             </Button>
           </CardContent>
         </Card>
-        {/* Cleanliness Map */}
-        <BurkinaCleanlinessMap />
+
+
 
         {/* AI Assistant */}
         <AIAssistant />
