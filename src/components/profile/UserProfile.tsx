@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProfilePhotoUpload from './ProfilePhotoUpload';
 import AIAssistant from './AIAssistant';
 import { Phone, Mail, Calendar, Edit } from 'lucide-react';
-import { Phone, Mail, Calendar, Edit } from 'lucide-react';
  import { useNavigate } from 'react-router-dom';
  
  interface UserProfileProps {
