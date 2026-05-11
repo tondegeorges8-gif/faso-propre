@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import SponsorBanner from '@/components/sponsors/SponsorBanner';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload';
+import BurkinaCleanlinessMap from '@/components/map/BurkinaCleanlinessMap';
 import { 
   Plus, 
   Settings, 
@@ -230,6 +231,9 @@ const Dashboard: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Public Cleanliness Heatmap */}
+        <BurkinaCleanlinessMap />
 
         {/* Sponsor Banner */}
         <SponsorBanner variant="inline" />

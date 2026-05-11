@@ -434,6 +434,15 @@ export type Database = {
       }
     }
     Functions: {
+      get_public_cleanliness_stats: {
+        Args: never
+        Returns: {
+          pending: number
+          resolved: number
+          total: number
+          ville: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
