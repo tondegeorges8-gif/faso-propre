@@ -90,18 +90,17 @@ const BurkinaCleanlinessMap: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const { data } = await supabase
-        .from('signalements')
-        .select('ville, status');
+      const { data } = await supabase.rpc('get_public_cleanliness_stats');
 
       if (!data) { setLoading(false); return; }
 
       const grouped: Record<string, { count: number; resolved: number; pending: number }> = {};
-      data.forEach((s) => {
-        if (!grouped[s.ville]) grouped[s.ville] = { count: 0, resolved: 0, pending: 0 };
-        grouped[s.ville].count++;
-        if (s.status === 'RESOLVED') grouped[s.ville].resolved++;
-        else grouped[s.ville].pending++;
+      (data as Array<{ ville: string; total: number; resolved: number; pending: number }>).forEach((s) => {
+        grouped[s.ville] = {
+          count: Number(s.total) || 0,
+          resolved: Number(s.resolved) || 0,
+          pending: Number(s.pending) || 0,
+        };
       });
 
       const regions: RegionData[] = Object.entries(REGION_POSITIONS).map(([name, pos]) => ({
