@@ -232,6 +232,9 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
 
+        {/* Public Cleanliness Heatmap */}
+        <BurkinaCleanlinessMap />
+
         {/* Sponsor Banner */}
         <SponsorBanner variant="inline" />
 
