@@ -3,13 +3,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Award, Medal, Trophy, Lock } from 'lucide-react';
+import { Award, Medal, Trophy, Lock, type LucideIcon } from 'lucide-react';
 
 type BadgeTier = {
   key: 'bronze' | 'silver' | 'gold';
   label: string;
   threshold: number;
-  Icon: React.ComponentType<{ size?: number; className?: string }>;
+  Icon: LucideIcon;
   gradient: string;
   ring: string;
 };
