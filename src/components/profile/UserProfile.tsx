@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import ProfilePhotoUpload from './ProfilePhotoUpload';
 import AIAssistant from './AIAssistant';
+import CitizenBadgeCard from '@/components/loyalty/CitizenBadgeCard';
 import { Phone, Mail, Calendar, Edit } from 'lucide-react';
  import { useNavigate } from 'react-router-dom';
  
@@ -92,10 +93,11 @@ import { Phone, Mail, Calendar, Edit } from 'lucide-react';
              <Edit size={18} className="mr-2" />
              Modifier mon profil
             </Button>
-          </CardContent>
+         </CardContent>
         </Card>
 
-
+        {/* Citizen Badges */}
+        <CitizenBadgeCard />
 
         {/* AI Assistant */}
         <AIAssistant />
