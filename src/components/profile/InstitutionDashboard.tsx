@@ -5,6 +5,7 @@
  import { Button } from '@/components/ui/button';
  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
  import { supabase } from '@/integrations/supabase/client';
+ import { sendWebhook } from '@/lib/webhook';
  import { INSTITUTIONS, REPORT_STATUSES, type InstitutionId } from '@/data/institutions';
  import { useToast } from '@/hooks/use-toast';
  import { 
@@ -85,6 +86,8 @@
          .eq('id', signalementId);
  
        if (error) throw error;
+
+       sendWebhook('status_change', { signalement_id: signalementId, new_status: newStatus, actor: 'institution' });
  
        toast({
          title: 'Statut mis à jour',

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFounderAccess } from '@/hooks/useFounderAccess';
 import { supabase } from '@/integrations/supabase/client';
+import { sendWebhook } from '@/lib/webhook';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -56,6 +58,25 @@ const FounderDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { isFounder, isLoading: founderLoading } = useFounderAccess();
+  const { toast } = useToast();
+  const [isResyncing, setIsResyncing] = useState(false);
+
+  const handleResyncWebhook = async () => {
+    setIsResyncing(true);
+    try {
+      const { data, error } = await supabase
+        .from('signalements')
+        .select('id, user_id, nom_complet, category, subcategory, description, ville, latitude, longitude, photo_url, audio_url, status, created_at');
+      if (error) throw error;
+      (data ?? []).forEach((row) => sendWebhook('signalement_resync', row));
+      toast({ title: 'Resynchronisation lancée', description: `${data?.length ?? 0} signalements envoyés au webhook.` });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e.message ?? 'Echec resync', variant: 'destructive' });
+    } finally {
+      setIsResyncing(false);
+    }
+  };
+
   
   
   const [balance, setBalance] = useState<FounderBalance>({
@@ -362,6 +383,16 @@ const FounderDashboard: React.FC = () => {
               currentBalance={balance.current_balance}
               onWithdraw={handleWithdraw}
             />
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Webhook externe</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={handleResyncWebhook} disabled={isResyncing} variant="outline" className="w-full">
+                  {isResyncing ? 'Envoi en cours...' : 'Renvoyer tous les signalements existants'}
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="institutions">

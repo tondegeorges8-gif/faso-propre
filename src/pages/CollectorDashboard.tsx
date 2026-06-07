@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { sendWebhook } from '@/lib/webhook';
 import { 
   ArrowLeft,
   Truck,
@@ -100,6 +101,7 @@ const CollectorDashboard: React.FC = () => {
         .eq('id', signalementId);
 
       if (error) throw error;
+      sendWebhook('status_change', { signalement_id: signalementId, new_status: 'IN_PROGRESS', actor: 'collector' });
       fetchSignalements();
     } catch (error) {
       console.error('Error accepting mission:', error);
@@ -114,6 +116,7 @@ const CollectorDashboard: React.FC = () => {
         .eq('id', signalementId);
 
       if (error) throw error;
+      sendWebhook('status_change', { signalement_id: signalementId, new_status: 'RESOLVED', actor: 'collector' });
       fetchSignalements();
     } catch (error) {
       console.error('Error completing mission:', error);

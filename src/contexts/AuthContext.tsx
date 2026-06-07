@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
+import { sendWebhook } from '@/lib/webhook';
 
 export interface Profile {
   id: string;
@@ -155,6 +156,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (roleError) {
         console.error('Role assignment error:', roleError);
       }
+
+      sendWebhook('user_signup', {
+        user_id: data.user.id,
+        nom: userData.nom.trim(),
+        prenoms: userData.prenoms.trim(),
+        email: userData.email.trim(),
+        telephone: userData.telephone.trim(),
+      });
     }
 
     return { success: true };
