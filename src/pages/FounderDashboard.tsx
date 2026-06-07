@@ -383,6 +383,16 @@ const FounderDashboard: React.FC = () => {
               currentBalance={balance.current_balance}
               onWithdraw={handleWithdraw}
             />
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Webhook externe</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={handleResyncWebhook} disabled={isResyncing} variant="outline" className="w-full">
+                  {isResyncing ? 'Envoi en cours...' : 'Renvoyer tous les signalements existants'}
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="institutions">
