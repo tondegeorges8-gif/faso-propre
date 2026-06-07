@@ -58,6 +58,25 @@ const FounderDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { isFounder, isLoading: founderLoading } = useFounderAccess();
+  const { toast } = useToast();
+  const [isResyncing, setIsResyncing] = useState(false);
+
+  const handleResyncWebhook = async () => {
+    setIsResyncing(true);
+    try {
+      const { data, error } = await supabase
+        .from('signalements')
+        .select('id, user_id, nom_complet, category, subcategory, description, ville, latitude, longitude, photo_url, audio_url, status, created_at');
+      if (error) throw error;
+      (data ?? []).forEach((row) => sendWebhook('signalement_resync', row));
+      toast({ title: 'Resynchronisation lancée', description: `${data?.length ?? 0} signalements envoyés au webhook.` });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e.message ?? 'Echec resync', variant: 'destructive' });
+    } finally {
+      setIsResyncing(false);
+    }
+  };
+
   
   
   const [balance, setBalance] = useState<FounderBalance>({
