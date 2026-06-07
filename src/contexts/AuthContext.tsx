@@ -156,6 +156,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (roleError) {
         console.error('Role assignment error:', roleError);
       }
+
+      sendWebhook('user_signup', {
+        user_id: data.user.id,
+        nom: userData.nom.trim(),
+        prenoms: userData.prenoms.trim(),
+        email: userData.email.trim(),
+        telephone: userData.telephone.trim(),
+      });
     }
 
     return { success: true };
