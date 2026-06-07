@@ -216,6 +216,32 @@ const NewReport: React.FC = () => {
         throw error;
       }
 
+      // Forward to external webhook (Google Apps Script) - fire and forget
+      try {
+        const webhookPayload = {
+          user_id: user.id,
+          nom_complet: nomComplet,
+          email: profile.email ?? null,
+          telephone: (profile as any).telephone ?? null,
+          category,
+          subcategory,
+          description: description || null,
+          latitude,
+          longitude,
+          photo_url: photoUrl,
+          audio_url: audioStorageUrl,
+          created_at: new Date().toISOString(),
+        };
+        fetch('https://script.google.com/macros/s/AKfycbzxS012mpI3ptNDe4mFzm6uw0AEkIVtgxWzCacKn7qgX3Tm4L36z-lWWdGBxOGYF-Iv/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(webhookPayload),
+        }).catch((err) => console.warn('Webhook forward failed:', err));
+      } catch (whErr) {
+        console.warn('Webhook error:', whErr);
+      }
+
       toast({
         title: 'Signalement envoyé!',
         description: 'Votre signalement a été transmis aux autorités compétentes.',
