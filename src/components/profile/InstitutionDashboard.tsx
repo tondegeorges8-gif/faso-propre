@@ -86,6 +86,8 @@
          .eq('id', signalementId);
  
        if (error) throw error;
+
+       sendWebhook('status_change', { signalement_id: signalementId, new_status: newStatus, actor: 'institution' });
  
        toast({
          title: 'Statut mis à jour',
