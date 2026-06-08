@@ -218,19 +218,23 @@ const NewReport: React.FC = () => {
 
       // Forward to external webhook (Google Apps Script) - fire and forget
       try {
+        const institutionNom = INSTITUTIONS[category as keyof typeof INSTITUTIONS]?.nom || category;
         const webhookPayload = {
-          user_id: user.id,
-          nom_complet: nomComplet,
-          email: profile.email ?? null,
-          telephone: (profile as any).telephone ?? null,
-          category,
-          subcategory,
-          description: description || null,
-          latitude,
-          longitude,
-          photo_url: photoUrl,
-          audio_url: audioStorageUrl,
-          created_at: new Date().toISOString(),
+          timestamp: new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Ouagadougou' }),
+          institution: institutionNom,
+          categorie: subcategory,
+          description: description || '',
+          nom: nomComplet,
+          telephone: (profile as any).telephone || '+22656009893',
+          gps: latitude && longitude ? `${latitude},${longitude}` : '0,0',
+          lieu: latitude && longitude ? `${latitude},${longitude}` : 'Non spécifié',
+          photo_url: photoUrl
+            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/signalements-photos/${photoUrl}`
+            : '',
+          audio_url: audioStorageUrl
+            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/signalements-audio/${audioStorageUrl}`
+            : '',
+          statut: 'Nouveau',
         };
         fetch('https://script.google.com/macros/s/AKfycbzxS012mpI3ptNDe4mFzm6uw0AEkIVtgxWzCacKn7qgX3Tm4L36z-lWWdGBxOGYF-Iv/exec', {
           method: 'POST',
