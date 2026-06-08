@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { INSTITUTIONS } from '@/data/institutions';
+import { WEBHOOK_URL } from '@/lib/webhook';
 import GPSCapture from '@/components/location/GPSCapture';
 import OnboardingGuide from '@/components/onboarding/OnboardingGuide';
 import { supabase } from '@/integrations/supabase/client';
