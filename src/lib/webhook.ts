@@ -1,6 +1,7 @@
 // Fire-and-forget forwarder to the external Google Apps Script webhook
-const WEBHOOK_URL =
-  'https://script.google.com/macros/s/AKfycbzxS012mpI3ptNDe4mFzm6uw0AEkIVtgxWzCacKn7qgX3Tm4L36z-lWWdGBxOGYF-Iv/exec';
+// WEBHOOK_URL: endpoint qui relaie les messages WhatsApp (UltraMsg)
+export const WEBHOOK_URL =
+  'https://script.google.com/macros/s/AKfycbzykQu_pL6zhCByXPsP99XbqoDBdmk1vDSZmQHHnC8vWOAUMcGCrr7ZXnTw1C6D8DDp/exec';
 
 export function sendWebhook(event: string, payload: Record<string, unknown>) {
   try {
