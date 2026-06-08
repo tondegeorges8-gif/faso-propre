@@ -231,7 +231,13 @@ const NewReport: React.FC = () => {
           photo_url: photoUrl
             ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/signalements-photos/${photoUrl}`
             : '',
+          photoUrl: photoUrl
+            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/signalements-photos/${photoUrl}`
+            : '',
           audio_url: audioStorageUrl
+            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/signalements-audio/${audioStorageUrl}`
+            : '',
+          audioUrl: audioStorageUrl
             ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/signalements-audio/${audioStorageUrl}`
             : '',
           statut: 'Nouveau',
