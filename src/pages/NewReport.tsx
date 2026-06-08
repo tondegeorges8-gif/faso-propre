@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { INSTITUTIONS } from '@/data/institutions';
+import { WEBHOOK_URL } from '@/lib/webhook';
 import GPSCapture from '@/components/location/GPSCapture';
 import OnboardingGuide from '@/components/onboarding/OnboardingGuide';
 import { supabase } from '@/integrations/supabase/client';
@@ -242,7 +243,7 @@ const NewReport: React.FC = () => {
             : '',
           statut: 'Nouveau',
         };
-        fetch('https://script.google.com/macros/s/AKfycbzxS012mpI3ptNDe4mFzm6uw0AEkIVtgxWzCacKn7qgX3Tm4L36z-lWWdGBxOGYF-Iv/exec', {
+        fetch(WEBHOOK_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
