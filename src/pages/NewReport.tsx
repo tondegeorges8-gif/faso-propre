@@ -243,7 +243,7 @@ const NewReport: React.FC = () => {
             : '',
           statut: 'Nouveau',
         };
-        fetch('https://script.google.com/macros/s/AKfycbzxS012mpI3ptNDe4mFzm6uw0AEkIVtgxWzCacKn7qgX3Tm4L36z-lWWdGBxOGYF-Iv/exec', {
+        fetch(WEBHOOK_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
