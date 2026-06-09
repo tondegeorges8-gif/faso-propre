@@ -226,7 +226,7 @@ const NewReport: React.FC = () => {
           categorie: subcategory,
           description: description || '',
           nom: nomComplet,
-          telephone: (profile as any).telephone || '+22656009893',
+          telephone: (profile as any).telephone || 'Non renseigné',
           gps: latitude && longitude ? `${latitude},${longitude}` : '0,0',
           lieu: latitude && longitude ? `${latitude},${longitude}` : 'Non spécifié',
           photo_url: photoUrl
