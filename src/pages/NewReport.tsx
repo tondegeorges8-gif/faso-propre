@@ -220,27 +220,54 @@ const NewReport: React.FC = () => {
       // Forward to external webhook (Google Apps Script) - fire and forget
       try {
         const institutionNom = INSTITUTIONS[category as keyof typeof INSTITUTIONS]?.nom || category;
+
+        // Générer des URLs signées (1 an) pour que WhatsApp puisse afficher les médias
+        const ONE_YEAR = 60 * 60 * 24 * 365;
+        let photoSignedUrl = '';
+        let audioSignedUrl = '';
+        let avatarSignedUrl = '';
+        if (photoUrl) {
+          const { data } = await supabase.storage
+            .from('signalements-photos')
+            .createSignedUrl(photoUrl, ONE_YEAR);
+          photoSignedUrl = data?.signedUrl || '';
+        }
+        if (audioStorageUrl) {
+          const { data } = await supabase.storage
+            .from('signalements-audio')
+            .createSignedUrl(audioStorageUrl, ONE_YEAR);
+          audioSignedUrl = data?.signedUrl || '';
+        }
+        const avatarPath = (profile as any).avatar_url as string | null;
+        if (avatarPath) {
+          const { data } = await supabase.storage
+            .from('avatars')
+            .createSignedUrl(avatarPath, ONE_YEAR);
+          avatarSignedUrl = data?.signedUrl || '';
+        }
+
+        const lieuTxt = latitude && longitude
+          ? `https://www.google.com/maps?q=${latitude},${longitude}`
+          : 'Non spécifié';
+
         const webhookPayload = {
           timestamp: new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Ouagadougou' }),
           institution: institutionNom,
           categorie: subcategory,
           description: description || '',
           nom: nomComplet,
+          prenoms: (profile as any).prenoms || '',
+          nom_famille: (profile as any).nom || '',
           telephone: (profile as any).telephone || 'Non renseigné',
+          photo_profil: avatarSignedUrl,
+          avatarUrl: avatarSignedUrl,
           gps: latitude && longitude ? `${latitude},${longitude}` : '0,0',
-          lieu: latitude && longitude ? `${latitude},${longitude}` : 'Non spécifié',
-          photo_url: photoUrl
-            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/signalements-photos/${photoUrl}`
-            : '',
-          photoUrl: photoUrl
-            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/signalements-photos/${photoUrl}`
-            : '',
-          audio_url: audioStorageUrl
-            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/signalements-audio/${audioStorageUrl}`
-            : '',
-          audioUrl: audioStorageUrl
-            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/signalements-audio/${audioStorageUrl}`
-            : '',
+          lieu: lieuTxt,
+          mapsUrl: lieuTxt,
+          photo_url: photoSignedUrl,
+          photoUrl: photoSignedUrl,
+          audio_url: audioSignedUrl,
+          audioUrl: audioSignedUrl,
           statut: 'Nouveau',
         };
         fetch(WEBHOOK_URL, {
