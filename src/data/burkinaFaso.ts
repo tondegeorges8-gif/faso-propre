@@ -83,68 +83,168 @@ export const COMMON_NEIGHBORHOODS = [
 // Report categories with emergency numbers and subcategories
 export const REPORT_CATEGORIES = {
   "ONEA": {
-    name: "ONEA (Eaux)",
+    name: "ONEA - Eau",
     phone: "80 00 11 11",
     icon: "💧",
-    color: "hsl(200, 80%, 50%)",
+    color: "hsl(210, 100%, 35%)",
     subcategories: [
-      "Fuite d'eau",
-      "Tuyau percé",
-      "Compteur défectueux",
-      "Manque de pression",
-      "Eau insalubre",
-      "Raccordement frauduleux"
+      "Coupure d'eau excessive",
+      "Manque de pression d'eau",
+      "Qualité de l'eau : trouble, odeur, couleur anormale",
+      "Compteur défaillant / cassé",
+      "Fuite d'eau sur la voie publique",
+      "Fuite d'eau avant compteur",
+      "Branchement illégal",
+      "Facturation anormale"
     ]
   },
   "SONABEL": {
-    name: "SONABEL (Électricité)",
+    name: "SONABEL - Électricité",
     phone: "80 00 11 30",
     icon: "⚡",
     color: "hsl(45, 100%, 50%)",
     subcategories: [
-      "Câble sectionné",
-      "Poteau incliné",
-      "Transformateur bruyant/fume",
-      "Éclairage en panne",
-      "Compteur en feu",
-      "Coupure localisée"
+      "Coupure d'électricité excessive",
+      "Baisse de tension",
+      "Surtension",
+      "Câble électrique sectionné au sol",
+      "Poteau électrique incliné / tombé / dangereux",
+      "Éclairage public éteint la nuit",
+      "Poteau électrique en feu / étincelles",
+      "Compteur électrique en feu / qui crépite",
+      "Transformateur défaillant / bruit anormal",
+      "Branchement illégal"
     ]
   },
-  "BRIGADE_VERTE": {
-    name: "Brigade Verte (Nettoyage)",
+  "ONASER": {
+    name: "ONASER - Routes et Signalisation",
+    phone: "25 30 67 10",
+    icon: "🚦",
+    color: "hsl(140, 60%, 40%)",
+    subcategories: [
+      "Panneau de signalisation tombé / incliné",
+      "Panneau caché par la végétation",
+      "Feu tricolore ne s'allume pas",
+      "Feu tricolore tombé / incliné",
+      "Nids de poule dangereux",
+      "Vitesse excessive : besoin de ralentisseur",
+      "Marquage au sol effacé / inexistant",
+      "Route dégradée / trou béant",
+      "Pont / Dalot bouché",
+      "Débris sur la chaussée"
+    ]
+  },
+  "ANASUR": {
+    name: "UNASER - Environnement",
     phone: "25 31 18 36",
     icon: "🌿",
-    color: "hsl(120, 60%, 40%)",
+    color: "hsl(180, 70%, 40%)",
     subcategories: [
-      "Dépôt sauvage",
-      "Poubelle pleine",
-      "Brûlage de déchets",
-      "Canalisation d'eaux usées sauvage"
+      "Abattage illégal d'arbres",
+      "Espace vert non entretenu / transformé en dépotoir",
+      "Feu de brousse",
+      "Pollution de l'air : fumée d'usine / poussière",
+      "Dégradation de parc / jardin public",
+      "Déversement de produits chimiques dans la nature",
+      "Braconnage"
     ]
   },
-  "POLICE_MUNICIPALE": {
-    name: "Police Municipale (Mairie)",
+  "POLICE_MUN": {
+    name: "Police Municipale / Police Nationale",
     phone: "80 00 11 03",
-    icon: "🚔",
-    color: "hsl(220, 70%, 50%)",
+    icon: "👮",
+    color: "hsl(220, 10%, 25%)",
     subcategories: [
-      "Animaux errants",
-      "Occupation illégale de la voie",
-      "Nuisance sonore",
-      "Mendicité agressive"
+      "Nuisance sonore : bar, maquis, atelier, mosquée, église",
+      "Occupation illégale de la voie publique",
+      "Occupation illégale du domaine public",
+      "Voiture garée empêchant la circulation",
+      "Animaux errants dangereux",
+      "Jet illégal d'eaux usées dans les quartiers",
+      "Vente à la sauvette sur la voie",
+      "Trouble à l'ordre public / bagarre",
+      "Vente d'alcool aux mineurs"
     ]
   },
   "VOIRIE": {
-    name: "Voirie",
-    phone: "N/A",
-    icon: "🛣️",
-    color: "hsl(30, 60%, 50%)",
+    name: "Service de Nettoyage / Voirie",
+    phone: "25 30 62 00",
+    icon: "🧹",
+    color: "hsl(25, 90%, 55%)",
     subcategories: [
-      "Nids de poule",
-      "Caniveau bouché",
-      "Feu tricolore en panne",
-      "Panneau tombé",
-      "Pont endommagé"
+      "Dépôt d'ordure sauvage",
+      "Poubelle publique pleine / déborde",
+      "Mauvaise odeur : poubelle non ramassée",
+      "Camion de ramassage ne passe pas",
+      "Caniveau bouché par les ordures",
+      "Balayage des rues non fait",
+      "Déchets biomédicaux jetés n'importe où"
+    ]
+  },
+  "LABO_NAT": {
+    name: "Laboratoire National / Santé Publique",
+    phone: "25 30 71 72",
+    icon: "🔬",
+    color: "hsl(210, 5%, 50%)",
+    subcategories: [
+      "Produits de consommation périmés",
+      "Produit / nourriture empoisonné / toxique",
+      "Vente de médicaments illicites / contrefaits",
+      "Restaurant avec conditions d'hygiène douteuses",
+      "Eau de forage contaminée",
+      "Abattoir avec conditions d'hygiène douteuses"
+    ]
+  },
+  "MAIRIE": {
+    name: "Mairie / Arrondissement",
+    phone: "N/A",
+    icon: "🏛️",
+    color: "hsl(25, 30%, 40%)",
+    subcategories: [
+      "Problème d'acte de naissance / état civil",
+      "Marché : mauvaise gestion / insalubrité",
+      "Éclairage public dans le quartier défaillant",
+      "Autorisation de construction illégale",
+      "Terrain occupé illégalement",
+      "Écoulement d'eaux usées dans le quartier",
+      "Terrain vague non clôturé / dangereux"
+    ]
+  },
+  "SANTE": {
+    name: "Service Sanitaire / CSPS / Hôpitaux",
+    phone: "N/A",
+    icon: "🏥",
+    color: "hsl(350, 80%, 50%)",
+    subcategories: [
+      "Manque de médicaments au CSPS",
+      "Personnel de santé absent",
+      "Hygiène dans le centre de santé défaillante",
+      "Manque d'eau au centre de santé",
+      "Cas suspect de maladie : choléra, dengue, rougeole",
+      "Matériel médical défaillant"
+    ]
+  },
+  "ARCEP": {
+    name: "ARCEP - Télécommunications",
+    phone: "N/A",
+    icon: "📞",
+    color: "hsl(260, 50%, 55%)",
+    subcategories: [
+      "Réseau téléphonique mauvais / inexistant",
+      "Coupure internet fréquente",
+      "Antenne relais dangereuse"
+    ]
+  },
+  "MENAPLN": {
+    name: "MENAPLN - Éducation",
+    phone: "N/A",
+    icon: "🎓",
+    color: "hsl(210, 100%, 50%)",
+    subcategories: [
+      "École sans table-banc",
+      "Toit de salle de classe arraché",
+      "Manque d'eau / latrines à l'école",
+      "Enseignant absent"
     ]
   }
 };
