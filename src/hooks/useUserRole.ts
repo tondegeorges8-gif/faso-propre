@@ -3,7 +3,7 @@
  import { useAuth } from '@/contexts/AuthContext';
  
  export type AppRole = 'user' | 'collector' | 'admin' | 'founder';
- export type InstitutionId = 'ONEA' | 'SONABEL' | 'ONASER' | 'ANASUR' | 'LABO_NAT' | 'POLICE_MUN' | 'VOIRIE' | 'BRIGADE_VERTE';
+ export type InstitutionId = 'ONEA' | 'SONABEL' | 'ONASER' | 'ANASUR' | 'LABO_NAT' | 'POLICE_MUN' | 'VOIRIE' | 'MAIRIE' | 'SANTE' | 'ARCEP' | 'MENAPLN';
  
  interface UserRoleData {
    role: AppRole;
