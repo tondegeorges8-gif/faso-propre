@@ -9,6 +9,7 @@ import { INSTITUTIONS, REPORT_STATUSES } from '@/data/institutions';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
+import { Input } from '@/components/ui/input';
 import { 
   ArrowLeft, 
   MapPin,
@@ -16,10 +17,16 @@ import {
   Filter,
   Trash2,
   Mic,
-  ExternalLink
+  ExternalLink,
+  Search,
+  Download,
+  MessageCircle
 } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import InstitutionFilter from '@/components/institutions/InstitutionFilter';
+import InstitutionTracking from '@/components/institutions/InstitutionTracking';
+import StatusHistory from '@/components/reports/StatusHistory';
+import { downloadCsv, openWhatsAppSummary } from '@/lib/reportExport';
 
 
 const logo = '/logo.png';
@@ -53,12 +60,13 @@ const AudioPlayer: React.FC<{ path: string }> = ({ path }) => {
 
 const Reports: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, profile, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [signalements, setSignalements] = useState<Signalement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
   const [institutionFilter, setInstitutionFilter] = useState<string>('all');
+  const [search, setSearch] = useState<string>('');
 
 
   useEffect(() => {
@@ -200,11 +208,47 @@ const Reports: React.FC = () => {
     return acc;
   }, {});
 
+  const query = search.trim().toLowerCase();
+
   const filteredSignalements = signalements.filter(sig => {
     if (institutionFilter !== 'all' && sig.category !== institutionFilter) return false;
-    if (filter === 'all') return true;
-    return sig.status === filter;
+    if (filter !== 'all' && sig.status !== filter) return false;
+    if (!query) return true;
+    const institution = INSTITUTIONS[sig.category as keyof typeof INSTITUTIONS];
+    const haystack = [
+      sig.subcategory,
+      sig.description,
+      sig.ville,
+      sig.quartier,
+      sig.sous_quartier,
+      sig.secteur,
+      sig.arrondissement,
+      institution?.nom,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(query);
   });
+
+  const auteur = profile ? `${profile.prenoms} ${profile.nom}` : undefined;
+
+  const handleExportCsv = () => {
+    if (filteredSignalements.length === 0) {
+      toast({ title: 'Aucun signalement à exporter', variant: 'destructive' });
+      return;
+    }
+    downloadCsv(filteredSignalements, `signalements-${new Date().toISOString().slice(0, 10)}.csv`);
+    toast({ title: 'Export CSV généré' });
+  };
+
+  const handleWhatsAppSummary = () => {
+    if (filteredSignalements.length === 0) {
+      toast({ title: 'Aucun signalement à résumer', variant: 'destructive' });
+      return;
+    }
+    openWhatsAppSummary(filteredSignalements, auteur);
+  };
 
 
   if (authLoading || isLoading) {
@@ -245,6 +289,32 @@ const Reports: React.FC = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-4">
+        {/* Recherche rapide */}
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher (type, lieu, description…)"
+            className="pl-9"
+          />
+        </div>
+
+        {/* Actions : résumé WhatsApp + export CSV */}
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="outline" size="sm" onClick={handleWhatsAppSummary}>
+            <MessageCircle size={16} className="mr-1" />
+            Résumé WhatsApp
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportCsv}>
+            <Download size={16} className="mr-1" />
+            Export CSV
+          </Button>
+        </div>
+
+        {/* Suivi par institution */}
+        <InstitutionTracking signalements={signalements} />
+
         {/* Institution Filter */}
         <InstitutionFilter
           value={institutionFilter}
@@ -252,6 +322,7 @@ const Reports: React.FC = () => {
           counts={institutionCounts}
           totalCount={signalements.length}
         />
+
 
         {/* Filter Buttons */}
 
@@ -386,7 +457,10 @@ const Reports: React.FC = () => {
                         <AudioPlayer path={sig.audio_url} />
                       </div>
                     )}
-                    
+
+                    {/* Historique du statut */}
+                    <StatusHistory signalementId={sig.id} />
+
                     {/* Footer: date + actions */}
                     <div className="flex items-center justify-between pt-3 border-t">
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
