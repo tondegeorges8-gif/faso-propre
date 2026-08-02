@@ -191,10 +191,17 @@ const Reports: React.FC = () => {
     return parts.join(' → ');
   };
 
+  const institutionCounts = signalements.reduce<Record<string, number>>((acc, sig) => {
+    acc[sig.category] = (acc[sig.category] || 0) + 1;
+    return acc;
+  }, {});
+
   const filteredSignalements = signalements.filter(sig => {
+    if (institutionFilter !== 'all' && sig.category !== institutionFilter) return false;
     if (filter === 'all') return true;
     return sig.status === filter;
   });
+
 
   if (authLoading || isLoading) {
     return (
