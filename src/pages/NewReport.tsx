@@ -253,7 +253,11 @@ const NewReport: React.FC = () => {
         const webhookPayload = {
           timestamp: new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Ouagadougou' }),
           institution: institutionNom,
+          institution_id: category,
+          institution_contact: INSTITUTIONS[category as keyof typeof INSTITUTIONS]?.phone || 'N/A',
           categorie: subcategory,
+          type_probleme: subcategory,
+
           description: description || '',
           nom: nomComplet,
           prenoms: (profile as any).prenoms || '',
