@@ -240,8 +240,12 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
 
+        {/* Reports per institution */}
+        <InstitutionBreakdown counts={institutionCounts} />
+
         {/* Public Cleanliness Heatmap */}
         <BurkinaCleanlinessMap />
+
 
         {/* Sponsor Banner */}
         <SponsorBanner variant="inline" />
