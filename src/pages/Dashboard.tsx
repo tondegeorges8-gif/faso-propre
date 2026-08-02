@@ -14,6 +14,7 @@ import BottomNavigation from '@/components/navigation/BottomNavigation';
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload';
 import BurkinaCleanlinessMap from '@/components/map/BurkinaCleanlinessMap';
 import InstitutionBreakdown from '@/components/institutions/InstitutionBreakdown';
+import InstitutionTracking from '@/components/institutions/InstitutionTracking';
 
 import { 
   Plus, 
@@ -242,6 +243,9 @@ const Dashboard: React.FC = () => {
 
         {/* Reports per institution */}
         <InstitutionBreakdown counts={institutionCounts} />
+
+        {/* Suivi par institution */}
+        <InstitutionTracking signalements={userSignalements} />
 
         {/* Public Cleanliness Heatmap */}
         <BurkinaCleanlinessMap />

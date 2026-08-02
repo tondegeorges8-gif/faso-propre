@@ -181,6 +181,41 @@ export type Database = {
         }
         Relationships: []
       }
+      signalement_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_status: string
+          old_status: string | null
+          signalement_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_status: string
+          old_status?: string | null
+          signalement_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_status?: string
+          old_status?: string | null
+          signalement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signalement_status_history_signalement_id_fkey"
+            columns: ["signalement_id"]
+            isOneToOne: false
+            referencedRelation: "signalements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signalements: {
         Row: {
           arrondissement: string | null
