@@ -13,6 +13,8 @@ import SponsorBanner from '@/components/sponsors/SponsorBanner';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload';
 import BurkinaCleanlinessMap from '@/components/map/BurkinaCleanlinessMap';
+import InstitutionBreakdown from '@/components/institutions/InstitutionBreakdown';
+
 import { 
   Plus, 
   Settings, 
@@ -104,6 +106,12 @@ const Dashboard: React.FC = () => {
     inProgress: userSignalements.filter(r => r.status === 'IN_PROGRESS').length,
     resolved: userSignalements.filter(r => r.status === 'RESOLVED').length,
   };
+
+  const institutionCounts = userSignalements.reduce<Record<string, number>>((acc, r) => {
+    acc[r.category] = (acc[r.category] || 0) + 1;
+    return acc;
+  }, {});
+
 
   if (isLoading) {
     return (
