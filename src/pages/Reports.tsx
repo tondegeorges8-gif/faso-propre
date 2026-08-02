@@ -19,6 +19,8 @@ import {
   ExternalLink
 } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
+import InstitutionFilter from '@/components/institutions/InstitutionFilter';
+
 
 const logo = '/logo.png';
 
@@ -56,6 +58,8 @@ const Reports: React.FC = () => {
   const [signalements, setSignalements] = useState<Signalement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
+  const [institutionFilter, setInstitutionFilter] = useState<string>('all');
+
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -191,10 +195,17 @@ const Reports: React.FC = () => {
     return parts.join(' → ');
   };
 
+  const institutionCounts = signalements.reduce<Record<string, number>>((acc, sig) => {
+    acc[sig.category] = (acc[sig.category] || 0) + 1;
+    return acc;
+  }, {});
+
   const filteredSignalements = signalements.filter(sig => {
+    if (institutionFilter !== 'all' && sig.category !== institutionFilter) return false;
     if (filter === 'all') return true;
     return sig.status === filter;
   });
+
 
   if (authLoading || isLoading) {
     return (
@@ -234,7 +245,16 @@ const Reports: React.FC = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-4">
+        {/* Institution Filter */}
+        <InstitutionFilter
+          value={institutionFilter}
+          onChange={setInstitutionFilter}
+          counts={institutionCounts}
+          totalCount={signalements.length}
+        />
+
         {/* Filter Buttons */}
+
         <div className="flex gap-2 overflow-x-auto pb-2">
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
