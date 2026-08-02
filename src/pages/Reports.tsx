@@ -19,6 +19,8 @@ import {
   ExternalLink
 } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
+import InstitutionFilter from '@/components/institutions/InstitutionFilter';
+
 
 const logo = '/logo.png';
 
@@ -56,6 +58,8 @@ const Reports: React.FC = () => {
   const [signalements, setSignalements] = useState<Signalement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
+  const [institutionFilter, setInstitutionFilter] = useState<string>('all');
+
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
