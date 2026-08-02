@@ -245,7 +245,16 @@ const Reports: React.FC = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-4">
+        {/* Institution Filter */}
+        <InstitutionFilter
+          value={institutionFilter}
+          onChange={setInstitutionFilter}
+          counts={institutionCounts}
+          totalCount={signalements.length}
+        />
+
         {/* Filter Buttons */}
+
         <div className="flex gap-2 overflow-x-auto pb-2">
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
