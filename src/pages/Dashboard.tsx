@@ -14,6 +14,7 @@ import BottomNavigation from '@/components/navigation/BottomNavigation';
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload';
 import BurkinaCleanlinessMap from '@/components/map/BurkinaCleanlinessMap';
 import InstitutionBreakdown from '@/components/institutions/InstitutionBreakdown';
+import { METIERS } from '@/data/metiers';
 import InstitutionTracking from '@/components/institutions/InstitutionTracking';
 
 import { 
@@ -237,6 +238,30 @@ const Dashboard: React.FC = () => {
             >
               <Clock size={24} />
               <span>Mes signalements</span>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Annuaire des prestataires */}
+        <Card className="shadow-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Annuaire des prestataires</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-2">
+              {METIERS.slice(0, 6).map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => navigate(`/prestataires/${m.id}`)}
+                  className="rounded-lg border border-border p-2 text-center hover:border-primary transition-colors"
+                >
+                  <div className="text-xl">{m.icon}</div>
+                  <div className="text-[11px] leading-tight mt-1">{m.name}</div>
+                </button>
+              ))}
+            </div>
+            <Button variant="outline" className="w-full mt-3" onClick={() => navigate('/prestataires')}>
+              Voir tout l'annuaire
             </Button>
           </CardContent>
         </Card>
