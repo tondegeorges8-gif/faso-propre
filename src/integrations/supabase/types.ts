@@ -145,6 +145,63 @@ export type Database = {
           },
         ]
       }
+      prestataires: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_verified: boolean
+          metier: string
+          nom: string
+          photo_url: string | null
+          prenoms: string
+          quartier: string | null
+          rating: number | null
+          specialite: string | null
+          telephone: string
+          updated_at: string
+          ville: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_verified?: boolean
+          metier: string
+          nom: string
+          photo_url?: string | null
+          prenoms: string
+          quartier?: string | null
+          rating?: number | null
+          specialite?: string | null
+          telephone: string
+          updated_at?: string
+          ville: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_verified?: boolean
+          metier?: string
+          nom?: string
+          photo_url?: string | null
+          prenoms?: string
+          quartier?: string | null
+          rating?: number | null
+          specialite?: string | null
+          telephone?: string
+          updated_at?: string
+          ville?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
