@@ -16,10 +16,10 @@ interface Props {
 export const AvailabilityDot: React.FC<{ available: boolean }> = ({ available }) => (
   <span className="inline-flex items-center gap-1 text-xs">
     <span
-      className={`h-2.5 w-2.5 rounded-full ${available ? 'bg-success' : 'bg-destructive'}`}
+      className={`h-2.5 w-2.5 rounded-full ${available ? 'bg-status-resolved' : 'bg-destructive'}`}
       aria-hidden
     />
-    <span className={available ? 'text-success' : 'text-destructive'}>
+    <span className={available ? 'text-status-resolved' : 'text-destructive'}>
       {available ? 'Disponible' : 'Occupé'}
     </span>
   </span>
