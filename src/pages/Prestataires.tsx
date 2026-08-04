@@ -7,13 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Search, Users, Settings2 } from 'lucide-react';
+import { ArrowLeft, Search, Users, Settings2, Navigation, BadgeCheck } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import PrestataireCard from '@/components/prestataires/PrestataireCard';
-import { METIERS, getMetier } from '@/data/metiers';
+import { METIERS, CATEGORIES_METIERS, getMetier, getMetiersByCategorie } from '@/data/metiers';
 import { QUARTIERS_BY_CITY } from '@/data/burkinaQuartiers';
 import { BURKINA_CITIES } from '@/data/burkinaCities';
-import { usePrestataires } from '@/hooks/usePrestataires';
+import { usePrestataires, haversineKm } from '@/hooks/usePrestataires';
+import { useUserPosition } from '@/hooks/useUserPosition';
 import { useUserRole } from '@/hooks/useUserRole';
 
 const ALL = '__all__';
@@ -23,10 +24,13 @@ const Prestataires: React.FC = () => {
   const { metier } = useParams();
   const { isAdmin, isFounder } = useUserRole();
   const { prestataires, isLoading } = usePrestataires(metier);
+  const { position, isLocating, locate, clear } = useUserPosition();
 
   const [ville, setVille] = useState<string>(ALL);
   const [quartier, setQuartier] = useState<string>(ALL);
   const [search, setSearch] = useState('');
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [onlyVerified, setOnlyVerified] = useState(false);
 
   const currentMetier = metier ? getMetier(metier) : undefined;
 
@@ -48,15 +52,30 @@ const Prestataires: React.FC = () => {
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase().trim();
-    return prestataires.filter((p) => {
-      if (ville !== ALL && p.ville !== ville) return false;
-      if (quartier !== ALL && p.quartier !== quartier) return false;
-      if (!term) return true;
-      return [p.nom, p.prenoms, p.specialite, p.quartier, p.ville, p.metier]
-        .filter(Boolean)
-        .some((v) => (v as string).toLowerCase().includes(term));
-    });
-  }, [prestataires, ville, quartier, search]);
+    const list = prestataires
+      .filter((p) => {
+        if (ville !== ALL && p.ville !== ville) return false;
+        if (quartier !== ALL && p.quartier !== quartier) return false;
+        if (onlyAvailable && !p.is_available) return false;
+        if (onlyVerified && !p.is_verified) return false;
+        if (!term) return true;
+        return [p.nom, p.prenoms, p.specialite, p.quartier, p.ville, p.metier]
+          .filter(Boolean)
+          .some((v) => (v as string).toLowerCase().includes(term));
+      })
+      .map((p) => ({
+        p,
+        distance:
+          position && p.latitude != null && p.longitude != null
+            ? haversineKm(position.lat, position.lng, p.latitude, p.longitude)
+            : null,
+      }));
+
+    if (position) {
+      list.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+    }
+    return list;
+  }, [prestataires, ville, quartier, search, onlyAvailable, onlyVerified, position]);
 
   const countsByMetier = useMemo(() => {
     const map: Record<string, number> = {};
@@ -103,23 +122,29 @@ const Prestataires: React.FC = () => {
       <main className="px-4 py-4 space-y-4 max-w-lg mx-auto">
         {/* Catégories métiers */}
         {!metier && (
-          <section>
-            <h2 className="font-semibold mb-2">Corps de métier</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {METIERS.map((m) => (
-                <button key={m.id} onClick={() => navigate(`/prestataires/${m.id}`)} className="text-left">
-                  <Card className="shadow-card h-full hover:border-primary transition-colors">
-                    <CardContent className="p-3">
-                      <div className="text-2xl mb-1">{m.icon}</div>
-                      <div className="font-semibold text-sm leading-tight">{m.name}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {countsByMetier[m.id] ?? 0} prestataire{(countsByMetier[m.id] ?? 0) > 1 ? 's' : ''}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </button>
-              ))}
-            </div>
+          <section className="space-y-4">
+            {CATEGORIES_METIERS.map((cat) => (
+              <div key={cat.id}>
+                <h2 className="font-semibold mb-2 text-sm">
+                  {cat.icon} {cat.name}
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {getMetiersByCategorie(cat.id).map((m) => (
+                    <button key={m.id} onClick={() => navigate(`/prestataires/${m.id}`)} className="text-left">
+                      <Card className="shadow-card h-full hover:border-primary transition-colors">
+                        <CardContent className="p-3">
+                          <div className="text-2xl mb-1">{m.icon}</div>
+                          <div className="font-semibold text-sm leading-tight">{m.name}</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {countsByMetier[m.id] ?? 0} prestataire{(countsByMetier[m.id] ?? 0) > 1 ? 's' : ''}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </section>
         )}
 
@@ -167,6 +192,32 @@ const Prestataires: React.FC = () => {
             </Select>
           </div>
 
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={position ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => (position ? clear() : locate())}
+              disabled={isLocating}
+            >
+              <Navigation size={14} className="mr-1" />
+              {isLocating ? 'Localisation...' : position ? 'Tri par proximité actif' : 'Près de moi'}
+            </Button>
+            <Button
+              variant={onlyAvailable ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setOnlyAvailable((v) => !v)}
+            >
+              🟢 Disponibles
+            </Button>
+            <Button
+              variant={onlyVerified ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setOnlyVerified((v) => !v)}
+            >
+              <BadgeCheck size={14} className="mr-1" /> Vérifiés
+            </Button>
+          </div>
+
           {(ville !== ALL || quartier !== ALL) && (
             <div className="flex items-center gap-2 flex-wrap">
               {ville !== ALL && <Badge variant="secondary">{ville}</Badge>}
@@ -201,7 +252,9 @@ const Prestataires: React.FC = () => {
               </CardContent>
             </Card>
           ) : (
-            filtered.map((p) => <PrestataireCard key={p.id} prestataire={p} />)
+            filtered.map(({ p, distance }) => (
+              <PrestataireCard key={p.id} prestataire={p} distanceKm={distance} />
+            ))
           )}
         </section>
       </main>
