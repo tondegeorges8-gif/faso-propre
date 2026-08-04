@@ -17,6 +17,7 @@ import SponsorsAdmin from "./pages/SponsorsAdmin";
 import Profile from "./pages/Profile";
 import Prestataires from "./pages/Prestataires";
 import PrestatairesAdmin from "./pages/PrestatairesAdmin";
+import PrestataireProfile from "./pages/PrestataireProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/prestataires" element={<Prestataires />} />
             <Route path="/admin/prestataires" element={<PrestatairesAdmin />} />
+            <Route path="/prestataires/fiche/:id" element={<PrestataireProfile />} />
             <Route path="/prestataires/:metier" element={<Prestataires />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

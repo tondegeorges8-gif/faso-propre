@@ -151,7 +151,10 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          is_available: boolean
           is_verified: boolean
+          latitude: number | null
+          longitude: number | null
           metier: string
           nom: string
           photo_url: string | null
@@ -169,7 +172,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_available?: boolean
           is_verified?: boolean
+          latitude?: number | null
+          longitude?: number | null
           metier: string
           nom: string
           photo_url?: string | null
@@ -187,7 +193,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_available?: boolean
           is_verified?: boolean
+          latitude?: number | null
+          longitude?: number | null
           metier?: string
           nom?: string
           photo_url?: string | null
