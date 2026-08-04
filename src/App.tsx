@@ -17,6 +17,7 @@ import SponsorsAdmin from "./pages/SponsorsAdmin";
 import Profile from "./pages/Profile";
 import Prestataires from "./pages/Prestataires";
 import PrestatairesAdmin from "./pages/PrestatairesAdmin";
+import PrestataireProfile from "./pages/PrestataireProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
