@@ -37,6 +37,7 @@ const Auth: React.FC = () => {
   const { toast } = useToast();
   
   const [mode, setMode] = useState<AuthMode>('register');
+  const [accountType, setAccountType] = useState<'citoyen' | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
