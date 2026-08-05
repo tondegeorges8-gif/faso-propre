@@ -383,7 +383,10 @@ const Auth: React.FC = () => {
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={() => setMode(mode === 'register' ? 'login' : 'register')}
+                  onClick={() => {
+                    setAccountType(null);
+                    setMode(mode === 'register' ? 'login' : 'register');
+                  }}
                 >
                   {mode === 'register' ? (
                     <span className="flex items-center gap-2">
