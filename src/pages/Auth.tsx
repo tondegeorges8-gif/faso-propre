@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, LogIn, Users, Briefcase } from 'lucide-react';
 import { z } from 'zod';
 
 const logo = '/logo.png';
@@ -37,6 +37,7 @@ const Auth: React.FC = () => {
   const { toast } = useToast();
   
   const [mode, setMode] = useState<AuthMode>('register');
+  const [accountType, setAccountType] = useState<'citoyen' | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -173,6 +174,59 @@ const Auth: React.FC = () => {
       </div>
     );
   }
+
+  // Choix du profil avant l'inscription
+  if (mode === 'register' && !accountType) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 flex items-center justify-center p-4">
+        <div className="w-full max-w-md animate-slide-up">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-card shadow-card overflow-hidden mb-4">
+              <img src={logo} alt="Faso Propre" className="w-full h-full object-cover" />
+            </div>
+            <h1 className="text-3xl font-bold text-primary">Faso Propre</h1>
+            <p className="text-muted-foreground mt-2">Choisissez votre type de compte</p>
+          </div>
+
+          <div className="space-y-4">
+            <button type="button" className="w-full text-left" onClick={() => setAccountType('citoyen')}>
+              <Card className="hover:shadow-lg transition-shadow border-primary/20">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users size={20} /> Utilisateur (Citoyen)
+                  </CardTitle>
+                  <CardDescription>
+                    Accès complet : carte des signalements, signalement d'incidents, annuaire des prestataires et Faso Yaar.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </button>
+
+            <button type="button" className="w-full text-left" onClick={() => navigate('/prestataire/inscription')}>
+              <Card className="hover:shadow-lg transition-shadow border-primary/20">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Briefcase size={20} /> Prestataire (Professionnel)
+                  </CardTitle>
+                  <CardDescription>
+                    Compte dédié à votre activité : soyez visible dans l'annuaire et contacté directement par les citoyens.
+                    Abonnement 6 mois — 10 000 FCFA (non certifié) ou 25 000 FCFA (certifié).
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </button>
+
+            <Button variant="outline" className="w-full" onClick={() => setMode('login')}>
+              <LogIn size={18} className="mr-2" />
+              J'ai déjà un compte
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 flex items-center justify-center p-4">
@@ -329,7 +383,10 @@ const Auth: React.FC = () => {
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={() => setMode(mode === 'register' ? 'login' : 'register')}
+                  onClick={() => {
+                    setAccountType(null);
+                    setMode(mode === 'register' ? 'login' : 'register');
+                  }}
                 >
                   {mode === 'register' ? (
                     <span className="flex items-center gap-2">

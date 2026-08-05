@@ -18,6 +18,8 @@ import Profile from "./pages/Profile";
 import Prestataires from "./pages/Prestataires";
 import PrestatairesAdmin from "./pages/PrestatairesAdmin";
 import PrestataireProfile from "./pages/PrestataireProfile";
+import PrestataireSignup from "./pages/PrestataireSignup";
+import FasoYaar from "./pages/FasoYaar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +47,9 @@ const App = () => (
             <Route path="/admin/prestataires" element={<PrestatairesAdmin />} />
             <Route path="/prestataires/fiche/:id" element={<PrestataireProfile />} />
             <Route path="/prestataires/:metier" element={<Prestataires />} />
+            <Route path="/prestataire/inscription" element={<PrestataireSignup />} />
+            <Route path="/faso-yaar" element={<FasoYaar />} />
+            <Route path="/faso-yaar/:categorie" element={<FasoYaar />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

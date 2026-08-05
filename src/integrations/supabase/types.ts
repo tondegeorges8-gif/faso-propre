@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      boutiques: {
+        Row: {
+          adresse: string | null
+          categorie: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_partner: boolean
+          is_verified: boolean
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          nom: string
+          produits: string | null
+          quartier: string | null
+          telephone: string | null
+          updated_at: string
+          ville: string
+          whatsapp: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          categorie: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_partner?: boolean
+          is_verified?: boolean
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          nom: string
+          produits?: string | null
+          quartier?: string | null
+          telephone?: string | null
+          updated_at?: string
+          ville: string
+          whatsapp?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          categorie?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_partner?: boolean
+          is_verified?: boolean
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          nom?: string
+          produits?: string | null
+          quartier?: string | null
+          telephone?: string | null
+          updated_at?: string
+          ville?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       founder_transactions: {
         Row: {
           amount: number
@@ -144,6 +207,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      prestataire_applications: {
+        Row: {
+          amount: number
+          cnib_url: string | null
+          created_at: string
+          diplome_url: string | null
+          email: string
+          id: string
+          metier: string | null
+          nom: string
+          payment_operator: string | null
+          payment_reference: string | null
+          photo_visage_url: string | null
+          prenom: string
+          status: string
+          subscription_type: string
+          telephone: string
+          updated_at: string
+          user_id: string
+          ville: string
+        }
+        Insert: {
+          amount?: number
+          cnib_url?: string | null
+          created_at?: string
+          diplome_url?: string | null
+          email: string
+          id?: string
+          metier?: string | null
+          nom: string
+          payment_operator?: string | null
+          payment_reference?: string | null
+          photo_visage_url?: string | null
+          prenom: string
+          status?: string
+          subscription_type: string
+          telephone: string
+          updated_at?: string
+          user_id: string
+          ville: string
+        }
+        Update: {
+          amount?: number
+          cnib_url?: string | null
+          created_at?: string
+          diplome_url?: string | null
+          email?: string
+          id?: string
+          metier?: string | null
+          nom?: string
+          payment_operator?: string | null
+          payment_reference?: string | null
+          photo_visage_url?: string | null
+          prenom?: string
+          status?: string
+          subscription_type?: string
+          telephone?: string
+          updated_at?: string
+          user_id?: string
+          ville?: string
+        }
+        Relationships: []
       }
       prestataires: {
         Row: {
@@ -554,7 +680,7 @@ export type Database = {
       is_founder: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "user" | "collector" | "admin" | "founder"
+      app_role: "user" | "collector" | "admin" | "founder" | "prestataire"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -682,7 +808,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["user", "collector", "admin", "founder"],
+      app_role: ["user", "collector", "admin", "founder", "prestataire"],
     },
   },
 } as const

@@ -2,17 +2,18 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
  
- export type AppRole = 'user' | 'collector' | 'admin' | 'founder';
+ export type AppRole = 'user' | 'collector' | 'admin' | 'founder' | 'prestataire';
  export type InstitutionId = 'ONEA' | 'SONABEL' | 'ONASER' | 'ANASUR' | 'LABO_NAT' | 'POLICE_MUN' | 'VOIRIE' | 'MAIRIE' | 'SANTE' | 'ARCEP' | 'MENAPLN';
  
  interface UserRoleData {
-   role: AppRole;
-   institution: InstitutionId | null;
-   isLoading: boolean;
-   isFounder: boolean;
-   isInstitution: boolean;
-   isCollector: boolean;
-   isAdmin: boolean;
+  role: AppRole;
+  institution: InstitutionId | null;
+  isLoading: boolean;
+  isFounder: boolean;
+  isInstitution: boolean;
+  isCollector: boolean;
+  isAdmin: boolean;
+  isPrestataire: boolean;
  }
  
  export const useUserRole = (): UserRoleData => {
@@ -56,6 +57,7 @@
      isFounder: role === 'founder',
      isInstitution: !!institution,
      isCollector: role === 'collector',
-     isAdmin: role === 'admin',
+    isAdmin: role === 'admin',
+    isPrestataire: role === 'prestataire',
    };
  };
