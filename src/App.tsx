@@ -20,6 +20,9 @@ import PrestatairesAdmin from "./pages/PrestatairesAdmin";
 import PrestataireProfile from "./pages/PrestataireProfile";
 import PrestataireSignup from "./pages/PrestataireSignup";
 import FasoYaar from "./pages/FasoYaar";
+import Messages from "./pages/Messages";
+import AnnonceNew from "./pages/AnnonceNew";
+import AdSubscription from "./pages/AdSubscription";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +53,9 @@ const App = () => (
             <Route path="/prestataire/inscription" element={<PrestataireSignup />} />
             <Route path="/faso-yaar" element={<FasoYaar />} />
             <Route path="/faso-yaar/:categorie" element={<FasoYaar />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/annonces/nouvelle" element={<AnnonceNew />} />
+            <Route path="/abonnement-pub" element={<AdSubscription />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
