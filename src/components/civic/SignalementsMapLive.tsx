@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin } from 'lucide-react';
-import { getInstitution } from '@/data/institutions';
+import { INSTITUTIONS } from '@/data/institutions';
 
 interface Pin {
   id: string;
@@ -116,7 +116,7 @@ const SignalementsMapLive: React.FC = () => {
         {selected && (
           <div className="p-3 rounded-lg border space-y-1">
             <div className="flex items-center justify-between">
-              <p className="font-medium text-sm">{getInstitution(selected.category)?.name ?? selected.category}</p>
+              <p className="font-medium text-sm">{INSTITUTIONS[selected.category]?.name ?? selected.category}</p>
               <Badge className={metaFor(selected.status).className} variant="secondary">
                 {metaFor(selected.status).label}
               </Badge>

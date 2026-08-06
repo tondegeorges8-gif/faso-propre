@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Megaphone, Plus } from 'lucide-react';
-import { getInstitution } from '@/data/institutions';
+import { INSTITUTIONS } from '@/data/institutions';
 import { HONEYPOT_NAME, checkRateLimit, isBotSubmission, sanitizeText, validateText } from '@/lib/antiSpam';
 
 interface Annonce {
@@ -135,7 +135,7 @@ const InstitutionAnnouncements: React.FC = () => {
               <div className="flex items-start justify-between gap-2">
                 <p className="font-medium text-sm leading-tight">{a.titre}</p>
                 <Badge variant="secondary" className="shrink-0 text-[10px]">
-                  {getInstitution(a.institution)?.name ?? a.institution}
+                  {INSTITUTIONS[a.institution]?.name ?? a.institution}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground whitespace-pre-line">{a.contenu}</p>
