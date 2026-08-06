@@ -116,7 +116,7 @@ const SignalementsMapLive: React.FC = () => {
         {selected && (
           <div className="p-3 rounded-lg border space-y-1">
             <div className="flex items-center justify-between">
-              <p className="font-medium text-sm">{INSTITUTIONS[selected.category]?.name ?? selected.category}</p>
+              <p className="font-medium text-sm">{INSTITUTIONS[selected.category]?.nom ?? selected.category}</p>
               <Badge className={metaFor(selected.status).className} variant="secondary">
                 {metaFor(selected.status).label}
               </Badge>

@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, ArrowLeft, Store, MapPin } from 'lucide-react';
+import { Search, ArrowLeft, Store, MapPin, Recycle, MessagesSquare, Wrench, Megaphone } from 'lucide-react';
+import PromosFlash from '@/components/marketplace/PromosFlash';
 
 const ALL = '__all__';
 

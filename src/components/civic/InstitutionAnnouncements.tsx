@@ -135,7 +135,7 @@ const InstitutionAnnouncements: React.FC = () => {
               <div className="flex items-start justify-between gap-2">
                 <p className="font-medium text-sm leading-tight">{a.titre}</p>
                 <Badge variant="secondary" className="shrink-0 text-[10px]">
-                  {INSTITUTIONS[a.institution]?.name ?? a.institution}
+                  {INSTITUTIONS[a.institution]?.nom ?? a.institution}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground whitespace-pre-line">{a.contenu}</p>
