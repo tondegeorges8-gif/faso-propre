@@ -14,6 +14,253 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_subscriptions: {
+        Row: {
+          amount: number
+          boutique_id: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          months: number
+          operator: string
+          otp_code: string | null
+          otp_verified: boolean
+          phone: string
+          starts_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          boutique_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          months?: number
+          operator: string
+          otp_code?: string | null
+          otp_verified?: boolean
+          phone: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          boutique_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          months?: number
+          operator?: string
+          otp_code?: string | null
+          otp_verified?: boolean
+          phone?: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_subscriptions_boutique_id_fkey"
+            columns: ["boutique_id"]
+            isOneToOne: false
+            referencedRelation: "boutiques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      annonces_institutionnelles: {
+        Row: {
+          author_id: string | null
+          contenu: string
+          created_at: string
+          event_date: string | null
+          id: string
+          image_url: string | null
+          institution: string
+          is_published: boolean
+          titre: string
+          updated_at: string
+          ville: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          contenu: string
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          image_url?: string | null
+          institution: string
+          is_published?: boolean
+          titre: string
+          updated_at?: string
+          ville?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          contenu?: string
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          image_url?: string | null
+          institution?: string
+          is_published?: boolean
+          titre?: string
+          updated_at?: string
+          ville?: string | null
+        }
+        Relationships: []
+      }
+      annonces_occasion: {
+        Row: {
+          categorie: string
+          contact_telephone: string | null
+          created_at: string
+          description: string | null
+          etat: string
+          id: string
+          is_active: boolean
+          photo_url: string | null
+          prix: number | null
+          quartier: string | null
+          region: string | null
+          titre: string
+          troc_contre: string | null
+          type_annonce: string
+          updated_at: string
+          user_id: string
+          ville: string
+        }
+        Insert: {
+          categorie: string
+          contact_telephone?: string | null
+          created_at?: string
+          description?: string | null
+          etat?: string
+          id?: string
+          is_active?: boolean
+          photo_url?: string | null
+          prix?: number | null
+          quartier?: string | null
+          region?: string | null
+          titre: string
+          troc_contre?: string | null
+          type_annonce?: string
+          updated_at?: string
+          user_id: string
+          ville: string
+        }
+        Update: {
+          categorie?: string
+          contact_telephone?: string | null
+          created_at?: string
+          description?: string | null
+          etat?: string
+          id?: string
+          is_active?: boolean
+          photo_url?: string | null
+          prix?: number | null
+          quartier?: string | null
+          region?: string | null
+          titre?: string
+          troc_contre?: string | null
+          type_annonce?: string
+          updated_at?: string
+          user_id?: string
+          ville?: string
+        }
+        Relationships: []
+      }
+      articles: {
+        Row: {
+          boutique_id: string
+          categorie: string
+          created_at: string
+          description: string | null
+          id: string
+          is_available: boolean
+          nom: string
+          owner_user_id: string
+          photo_url: string | null
+          prix: number
+          region: string | null
+          updated_at: string
+        }
+        Insert: {
+          boutique_id: string
+          categorie: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          nom: string
+          owner_user_id: string
+          photo_url?: string | null
+          prix?: number
+          region?: string | null
+          updated_at?: string
+        }
+        Update: {
+          boutique_id?: string
+          categorie?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          nom?: string
+          owner_user_id?: string
+          photo_url?: string | null
+          prix?: number
+          region?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_boutique_id_fkey"
+            columns: ["boutique_id"]
+            isOneToOne: false
+            referencedRelation: "boutiques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      avis: {
+        Row: {
+          commentaire: string | null
+          created_at: string
+          id: string
+          note: number
+          target_id: string
+          target_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commentaire?: string | null
+          created_at?: string
+          id?: string
+          note: number
+          target_id: string
+          target_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commentaire?: string | null
+          created_at?: string
+          id?: string
+          note?: number
+          target_id?: string
+          target_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       boutiques: {
         Row: {
           adresse: string | null
@@ -28,8 +275,12 @@ export type Database = {
           logo_url: string | null
           longitude: number | null
           nom: string
+          owner_user_id: string | null
           produits: string | null
           quartier: string | null
+          region: string | null
+          subscription_expires_at: string | null
+          subscription_status: string
           telephone: string | null
           updated_at: string
           ville: string
@@ -48,8 +299,12 @@ export type Database = {
           logo_url?: string | null
           longitude?: number | null
           nom: string
+          owner_user_id?: string | null
           produits?: string | null
           quartier?: string | null
+          region?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string
           telephone?: string | null
           updated_at?: string
           ville: string
@@ -68,12 +323,49 @@ export type Database = {
           logo_url?: string | null
           longitude?: number | null
           nom?: string
+          owner_user_id?: string | null
           produits?: string | null
           quartier?: string | null
+          region?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string
           telephone?: string | null
           updated_at?: string
           ville?: string
           whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          buyer_id: string
+          context_id: string | null
+          context_type: string | null
+          created_at: string
+          id: string
+          last_message_at: string
+          seller_id: string
+          subject: string | null
+        }
+        Insert: {
+          buyer_id: string
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          seller_id: string
+          subject?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          seller_id?: string
+          subject?: string | null
         }
         Relationships: []
       }
@@ -204,6 +496,41 @@ export type Database = {
             columns: ["related_sponsor_id"]
             isOneToOne: false
             referencedRelation: "sponsors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -369,6 +696,83 @@ export type Database = {
           prenoms?: string
           telephone?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      promos_flash: {
+        Row: {
+          boutique_id: string | null
+          created_at: string
+          description: string | null
+          ends_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          owner_user_id: string
+          prix_promo: number | null
+          reduction_pct: number | null
+          starts_at: string
+          titre: string
+          updated_at: string
+        }
+        Insert: {
+          boutique_id?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          owner_user_id: string
+          prix_promo?: number | null
+          reduction_pct?: number | null
+          starts_at?: string
+          titre: string
+          updated_at?: string
+        }
+        Update: {
+          boutique_id?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          owner_user_id?: string
+          prix_promo?: number | null
+          reduction_pct?: number | null
+          starts_at?: string
+          titre?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promos_flash_boutique_id_fkey"
+            columns: ["boutique_id"]
+            isOneToOne: false
+            referencedRelation: "boutiques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_limit_events: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
           user_id?: string
         }
         Relationships: []
@@ -661,12 +1065,37 @@ export type Database = {
       }
     }
     Functions: {
+      check_rate_limit: {
+        Args: { _action: string; _max_events: number; _window_seconds: number }
+        Returns: boolean
+      }
+      get_citizen_leaderboard: {
+        Args: { _limit?: number }
+        Returns: {
+          pseudo: string
+          rang: number
+          resolus: number
+          total: number
+        }[]
+      }
       get_public_cleanliness_stats: {
         Args: never
         Returns: {
           pending: number
           resolved: number
           total: number
+          ville: string
+        }[]
+      }
+      get_public_signalement_pins: {
+        Args: never
+        Returns: {
+          category: string
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          status: string
           ville: string
         }[]
       }
