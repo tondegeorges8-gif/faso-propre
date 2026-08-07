@@ -17,8 +17,12 @@ export type Database = {
       ad_subscriptions: {
         Row: {
           amount: number
+          article_id: string | null
           boutique_id: string | null
+          commission_amount: number
+          commission_rate: number
           created_at: string
+          days: number
           expires_at: string | null
           id: string
           months: number
@@ -28,13 +32,18 @@ export type Database = {
           phone: string
           starts_at: string | null
           status: string
+          target_type: string
           updated_at: string
           user_id: string
         }
         Insert: {
           amount?: number
+          article_id?: string | null
           boutique_id?: string | null
+          commission_amount?: number
+          commission_rate?: number
           created_at?: string
+          days?: number
           expires_at?: string | null
           id?: string
           months?: number
@@ -44,13 +53,18 @@ export type Database = {
           phone: string
           starts_at?: string | null
           status?: string
+          target_type?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number
+          article_id?: string | null
           boutique_id?: string | null
+          commission_amount?: number
+          commission_rate?: number
           created_at?: string
+          days?: number
           expires_at?: string | null
           id?: string
           months?: number
@@ -60,10 +74,18 @@ export type Database = {
           phone?: string
           starts_at?: string | null
           status?: string
+          target_type?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ad_subscriptions_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ad_subscriptions_boutique_id_fkey"
             columns: ["boutique_id"]
@@ -181,13 +203,17 @@ export type Database = {
           categorie: string
           created_at: string
           description: string | null
+          etat: string
           id: string
           is_available: boolean
           nom: string
           owner_user_id: string
           photo_url: string | null
+          photos: string[]
           prix: number
           region: string | null
+          troc_contre: string | null
+          type_annonce: string
           updated_at: string
         }
         Insert: {
@@ -195,13 +221,17 @@ export type Database = {
           categorie: string
           created_at?: string
           description?: string | null
+          etat?: string
           id?: string
           is_available?: boolean
           nom: string
           owner_user_id: string
           photo_url?: string | null
+          photos?: string[]
           prix?: number
           region?: string | null
+          troc_contre?: string | null
+          type_annonce?: string
           updated_at?: string
         }
         Update: {
@@ -209,13 +239,17 @@ export type Database = {
           categorie?: string
           created_at?: string
           description?: string | null
+          etat?: string
           id?: string
           is_available?: boolean
           nom?: string
           owner_user_id?: string
           photo_url?: string | null
+          photos?: string[]
           prix?: number
           region?: string | null
+          troc_contre?: string | null
+          type_annonce?: string
           updated_at?: string
         }
         Relationships: [

@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Package, Sparkles } from 'lucide-react';
+import { Package, Repeat, Sparkles } from 'lucide-react';
+import { useSignedUrl } from '@/hooks/useSignedUrl';
+import { MARKETPLACE_BUCKET } from './PhotoUploader';
 
 export interface Article {
   id: string;
@@ -15,6 +17,10 @@ export interface Article {
   region: string | null;
   prix: number;
   photo_url: string | null;
+  photos?: string[] | null;
+  type_annonce?: string;
+  etat?: string;
+  troc_contre?: string | null;
   is_available: boolean;
   created_at: string;
 }
@@ -23,12 +29,14 @@ const isNew = (d: string) => Date.now() - new Date(d).getTime() < 7 * 24 * 3600 
 
 const ArticleCard: React.FC<{ article: Article }> = ({ article }) => {
   const navigate = useNavigate();
+  const cover = article.photos?.[0] ?? article.photo_url;
+  const url = useSignedUrl(MARKETPLACE_BUCKET, cover);
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden cursor-pointer" onClick={() => navigate(`/produit/${article.id}`)}>
       <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
-        {article.photo_url ? (
-          <img src={article.photo_url} alt={article.nom} loading="lazy" className="w-full h-full object-cover" />
+        {url ? (
+          <img src={url} alt={article.nom} loading="lazy" className="w-full h-full object-cover" />
         ) : (
           <Package className="text-muted-foreground" size={32} />
         )}
@@ -42,18 +50,16 @@ const ArticleCard: React.FC<{ article: Article }> = ({ article }) => {
             </Badge>
           )}
         </div>
-        <p className="font-bold text-primary text-sm">{article.prix.toLocaleString('fr-FR')} FCFA</p>
+        {article.type_annonce === 'troc' ? (
+          <p className="text-sm font-semibold text-primary flex items-center gap-1">
+            <Repeat size={14} /> Troc
+          </p>
+        ) : (
+          <p className="font-bold text-primary text-sm">{Number(article.prix).toLocaleString('fr-FR')} FCFA</p>
+        )}
         {article.region && <p className="text-[11px] text-muted-foreground">Origine : {article.region}</p>}
-        <Button
-          size="sm"
-          variant="outline"
-          className="w-full"
-          onClick={() =>
-            navigate(`/messages?seller=${article.owner_user_id}&type=article&id=${article.id}&subject=${encodeURIComponent(article.nom)}`)
-          }
-        >
-          <MessageCircle size={14} className="mr-1" />
-          Contacter
+        <Button size="sm" variant="outline" className="w-full">
+          Voir le produit
         </Button>
       </CardContent>
     </Card>

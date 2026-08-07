@@ -49,7 +49,56 @@ export const BOUTIQUE_CATEGORIES: BoutiqueCategorie[] = [
     icon: '🥖',
     description: 'Pain, viennoiseries et grillades',
   },
+  {
+    id: 'MODE',
+    name: 'Mode, Couture & Chaussures',
+    icon: '👗',
+    description: 'Habillement, Faso Dan Fani, cordonnerie',
+  },
+  {
+    id: 'COSMETIQUE',
+    name: 'Cosmétiques & Beauté',
+    icon: '💄',
+    description: 'Produits de beauté, coiffure, esthétique',
+  },
+  {
+    id: 'ARTISANAT',
+    name: 'Artisanat & Décoration',
+    icon: '🪘',
+    description: 'Bronze, bogolan, vannerie, décoration',
+  },
+  {
+    id: 'MECANIQUE',
+    name: 'Mécanique & Pièces détachées',
+    icon: '🔧',
+    description: 'Auto, moto, pièces et accessoires',
+  },
+  {
+    id: 'RESTAURATION',
+    name: 'Restauration & Maquis',
+    icon: '🍲',
+    description: 'Restaurants, maquis, traiteurs',
+  },
+  {
+    id: 'AGRICULTURE',
+    name: 'Agriculture & Élevage',
+    icon: '🌾',
+    description: 'Intrants, semences, produits du terroir',
+  },
+  {
+    id: 'PHARMACIE',
+    name: 'Santé & Parapharmacie',
+    icon: '💊',
+    description: 'Produits de santé et d\'hygiène',
+  },
+  {
+    id: 'AUTRE',
+    name: 'Autre corps de métier',
+    icon: '🏪',
+    description: 'Tout autre secteur d\'activité',
+  },
 ];
 
 export const getBoutiqueCategorie = (id?: string) =>
   BOUTIQUE_CATEGORIES.find((c) => c.id === id);
+
