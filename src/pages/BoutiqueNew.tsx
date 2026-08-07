@@ -41,7 +41,7 @@ const BoutiqueNew: React.FC = () => {
   const quartiers = ville ? getQuartiers(ville) : [];
 
   const submit = async () => {
-    const nomError = validateText(nom, 3, 80);
+    const nomError = validateText(nom, { min: 3, max: 80, label: 'Le nom de la boutique' });
     const phoneError = validatePhone(telephone);
     if (nomError) return toast({ title: 'Nom de boutique invalide', description: nomError, variant: 'destructive' });
     if (!categorie) return toast({ title: 'Corps de métier requis', description: 'Choisissez le secteur de votre boutique.', variant: 'destructive' });

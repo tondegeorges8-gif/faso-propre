@@ -65,7 +65,7 @@ const ArticleNew: React.FC = () => {
   }, [user]);
 
   const submit = async () => {
-    const nomError = validateText(nom, 3, 100);
+    const nomError = validateText(nom, { min: 3, max: 100, label: 'Le titre du produit' });
     if (!boutiqueId) return toast({ title: 'Boutique requise', description: 'Choisissez la boutique du produit.', variant: 'destructive' });
     if (nomError) return toast({ title: 'Titre invalide', description: nomError, variant: 'destructive' });
     if (!categorie) return toast({ title: 'Catégorie requise', description: 'Choisissez une catégorie.', variant: 'destructive' });
