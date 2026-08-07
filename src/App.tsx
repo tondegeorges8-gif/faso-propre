@@ -23,6 +23,10 @@ import FasoYaar from "./pages/FasoYaar";
 import Messages from "./pages/Messages";
 import AnnonceNew from "./pages/AnnonceNew";
 import AdSubscription from "./pages/AdSubscription";
+import BoutiqueNew from "./pages/BoutiqueNew";
+import ArticleNew from "./pages/ArticleNew";
+import ArticleDetail from "./pages/ArticleDetail";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

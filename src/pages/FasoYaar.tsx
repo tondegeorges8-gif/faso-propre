@@ -12,6 +12,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, ArrowLeft, Store, MapPin, Recycle, MessagesSquare, Wrench, Megaphone } from 'lucide-react';
 import PromosFlash from '@/components/marketplace/PromosFlash';
+import ProductsGrid from '@/components/marketplace/ProductsGrid';
+
 
 const ALL = '__all__';
 
@@ -136,7 +138,10 @@ const FasoYaar: React.FC = () => {
         {!activeCategorie ? (
           <>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate('/annonces/nouvelle')}>
+              <Button variant="default" size="sm" onClick={() => navigate('/boutique/nouvelle')}>
+                <Store size={16} className="mr-1" /> Créer ma boutique
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate('/produit/nouveau')}>
                 <Recycle size={16} className="mr-1" /> Vendre / Troquer
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate('/messages')}>
@@ -145,14 +150,17 @@ const FasoYaar: React.FC = () => {
               <Button variant="outline" size="sm" onClick={() => navigate('/prestataires')}>
                 <Wrench size={16} className="mr-1" /> Services de proximité
               </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate('/abonnement-pub')}>
-                <Megaphone size={16} className="mr-1" /> Espace pub 5 000 F
+              <Button variant="outline" size="sm" className="col-span-2" onClick={() => navigate('/abonnement-pub')}>
+                <Megaphone size={16} className="mr-1" /> Espace pub — dès 1 000 F / jour
               </Button>
             </div>
 
             <PromosFlash />
 
+            <ProductsGrid search={search} />
+
             <h2 className="font-semibold text-lg">Catégories de boutiques</h2>
+
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {BOUTIQUE_CATEGORIES.map((cat) => (
