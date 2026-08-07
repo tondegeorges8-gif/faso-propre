@@ -60,6 +60,10 @@ const App = () => (
             <Route path="/messages" element={<Messages />} />
             <Route path="/annonces/nouvelle" element={<AnnonceNew />} />
             <Route path="/abonnement-pub" element={<AdSubscription />} />
+            <Route path="/boutique/nouvelle" element={<BoutiqueNew />} />
+            <Route path="/produit/nouveau" element={<ArticleNew />} />
+            <Route path="/produit/:id" element={<ArticleDetail />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
