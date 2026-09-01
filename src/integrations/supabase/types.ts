@@ -139,7 +139,9 @@ export type Database = {
       }
       annonces_occasion: {
         Row: {
+          boosted_until: string | null
           categorie: string
+          clicks_count: number
           contact_telephone: string | null
           created_at: string
           description: string | null
@@ -155,10 +157,14 @@ export type Database = {
           type_annonce: string
           updated_at: string
           user_id: string
+          views_count: number
           ville: string
+          visibility: string
         }
         Insert: {
+          boosted_until?: string | null
           categorie: string
+          clicks_count?: number
           contact_telephone?: string | null
           created_at?: string
           description?: string | null
@@ -174,10 +180,14 @@ export type Database = {
           type_annonce?: string
           updated_at?: string
           user_id: string
+          views_count?: number
           ville: string
+          visibility?: string
         }
         Update: {
+          boosted_until?: string | null
           categorie?: string
+          clicks_count?: number
           contact_telephone?: string | null
           created_at?: string
           description?: string | null
@@ -193,14 +203,18 @@ export type Database = {
           type_annonce?: string
           updated_at?: string
           user_id?: string
+          views_count?: number
           ville?: string
+          visibility?: string
         }
         Relationships: []
       }
       articles: {
         Row: {
+          boosted_until: string | null
           boutique_id: string
           categorie: string
+          clicks_count: number
           created_at: string
           description: string | null
           etat: string
@@ -215,10 +229,14 @@ export type Database = {
           troc_contre: string | null
           type_annonce: string
           updated_at: string
+          views_count: number
+          visibility: string
         }
         Insert: {
+          boosted_until?: string | null
           boutique_id: string
           categorie: string
+          clicks_count?: number
           created_at?: string
           description?: string | null
           etat?: string
@@ -233,10 +251,14 @@ export type Database = {
           troc_contre?: string | null
           type_annonce?: string
           updated_at?: string
+          views_count?: number
+          visibility?: string
         }
         Update: {
+          boosted_until?: string | null
           boutique_id?: string
           categorie?: string
+          clicks_count?: number
           created_at?: string
           description?: string | null
           etat?: string
@@ -251,6 +273,8 @@ export type Database = {
           troc_contre?: string | null
           type_annonce?: string
           updated_at?: string
+          views_count?: number
+          visibility?: string
         }
         Relationships: [
           {
@@ -318,6 +342,7 @@ export type Database = {
           telephone: string | null
           updated_at: string
           ville: string
+          visits_count: number
           whatsapp: string | null
         }
         Insert: {
@@ -342,6 +367,7 @@ export type Database = {
           telephone?: string | null
           updated_at?: string
           ville: string
+          visits_count?: number
           whatsapp?: string | null
         }
         Update: {
@@ -366,9 +392,45 @@ export type Database = {
           telephone?: string | null
           updated_at?: string
           ville?: string
+          visits_count?: number
           whatsapp?: string | null
         }
         Relationships: []
+      }
+      cart_items: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
@@ -565,6 +627,98 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          article_id: string | null
+          created_at: string
+          id: string
+          nom: string
+          order_id: string
+          prix: number
+          quantity: number
+        }
+        Insert: {
+          article_id?: string | null
+          created_at?: string
+          id?: string
+          nom: string
+          order_id: string
+          prix?: number
+          quantity?: number
+        }
+        Update: {
+          article_id?: string | null
+          created_at?: string
+          id?: string
+          nom?: string
+          order_id?: string
+          prix?: number
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          boutique_id: string | null
+          buyer_id: string
+          buyer_phone: string | null
+          created_at: string
+          id: string
+          note: string | null
+          seller_user_id: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          boutique_id?: string | null
+          buyer_id: string
+          buyer_phone?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          seller_user_id: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          boutique_id?: string | null
+          buyer_id?: string
+          buyer_phone?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          seller_user_id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_boutique_id_fkey"
+            columns: ["boutique_id"]
+            isOneToOne: false
+            referencedRelation: "boutiques"
             referencedColumns: ["id"]
           },
         ]
@@ -1112,6 +1266,69 @@ export type Database = {
           total: number
         }[]
       }
+      get_marketplace_annonces: {
+        Args: { _limited_sample?: number }
+        Returns: {
+          boosted_until: string | null
+          categorie: string
+          clicks_count: number
+          contact_telephone: string | null
+          created_at: string
+          description: string | null
+          etat: string
+          id: string
+          is_active: boolean
+          photo_url: string | null
+          prix: number | null
+          quartier: string | null
+          region: string | null
+          titre: string
+          troc_contre: string | null
+          type_annonce: string
+          updated_at: string
+          user_id: string
+          views_count: number
+          ville: string
+          visibility: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "annonces_occasion"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_marketplace_articles: {
+        Args: { _limited_sample?: number }
+        Returns: {
+          boosted_until: string | null
+          boutique_id: string
+          categorie: string
+          clicks_count: number
+          created_at: string
+          description: string | null
+          etat: string
+          id: string
+          is_available: boolean
+          nom: string
+          owner_user_id: string
+          photo_url: string | null
+          photos: string[]
+          prix: number
+          region: string | null
+          troc_contre: string | null
+          type_annonce: string
+          updated_at: string
+          views_count: number
+          visibility: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "articles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_public_cleanliness_stats: {
         Args: never
         Returns: {
@@ -1141,6 +1358,12 @@ export type Database = {
         Returns: boolean
       }
       is_founder: { Args: never; Returns: boolean }
+      track_article_click: { Args: { _article_id: string }; Returns: undefined }
+      track_article_view: { Args: { _article_id: string }; Returns: undefined }
+      track_boutique_visit: {
+        Args: { _boutique_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "user" | "collector" | "admin" | "founder" | "prestataire"
