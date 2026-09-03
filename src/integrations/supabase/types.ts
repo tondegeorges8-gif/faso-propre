@@ -229,6 +229,7 @@ export type Database = {
           troc_contre: string | null
           type_annonce: string
           updated_at: string
+          variants: Json
           views_count: number
           visibility: string
         }
@@ -251,6 +252,7 @@ export type Database = {
           troc_contre?: string | null
           type_annonce?: string
           updated_at?: string
+          variants?: Json
           views_count?: number
           visibility?: string
         }
@@ -273,6 +275,7 @@ export type Database = {
           troc_contre?: string | null
           type_annonce?: string
           updated_at?: string
+          variants?: Json
           views_count?: number
           visibility?: string
         }
@@ -323,6 +326,8 @@ export type Database = {
         Row: {
           adresse: string | null
           categorie: string
+          cnib_recto_url: string | null
+          cnib_verso_url: string | null
           created_at: string
           description: string | null
           id: string
@@ -333,10 +338,14 @@ export type Database = {
           logo_url: string | null
           longitude: number | null
           nom: string
+          owner_date_naissance: string | null
+          owner_nom: string | null
+          owner_prenoms: string | null
           owner_user_id: string | null
           produits: string | null
           quartier: string | null
           region: string | null
+          registre_commerce_url: string | null
           subscription_expires_at: string | null
           subscription_status: string
           telephone: string | null
@@ -348,6 +357,8 @@ export type Database = {
         Insert: {
           adresse?: string | null
           categorie: string
+          cnib_recto_url?: string | null
+          cnib_verso_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -358,10 +369,14 @@ export type Database = {
           logo_url?: string | null
           longitude?: number | null
           nom: string
+          owner_date_naissance?: string | null
+          owner_nom?: string | null
+          owner_prenoms?: string | null
           owner_user_id?: string | null
           produits?: string | null
           quartier?: string | null
           region?: string | null
+          registre_commerce_url?: string | null
           subscription_expires_at?: string | null
           subscription_status?: string
           telephone?: string | null
@@ -373,6 +388,8 @@ export type Database = {
         Update: {
           adresse?: string | null
           categorie?: string
+          cnib_recto_url?: string | null
+          cnib_verso_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -383,10 +400,14 @@ export type Database = {
           logo_url?: string | null
           longitude?: number | null
           nom?: string
+          owner_date_naissance?: string | null
+          owner_nom?: string | null
+          owner_prenoms?: string | null
           owner_user_id?: string | null
           produits?: string | null
           quartier?: string | null
           region?: string | null
+          registre_commerce_url?: string | null
           subscription_expires_at?: string | null
           subscription_status?: string
           telephone?: string | null
@@ -405,6 +426,8 @@ export type Database = {
           quantity: number
           updated_at: string
           user_id: string
+          variant_label: string | null
+          variant_prix: number | null
         }
         Insert: {
           article_id: string
@@ -413,6 +436,8 @@ export type Database = {
           quantity?: number
           updated_at?: string
           user_id: string
+          variant_label?: string | null
+          variant_prix?: number | null
         }
         Update: {
           article_id?: string
@@ -421,6 +446,8 @@ export type Database = {
           quantity?: number
           updated_at?: string
           user_id?: string
+          variant_label?: string | null
+          variant_prix?: number | null
         }
         Relationships: [
           {
@@ -640,6 +667,7 @@ export type Database = {
           order_id: string
           prix: number
           quantity: number
+          variant_label: string | null
         }
         Insert: {
           article_id?: string | null
@@ -649,6 +677,7 @@ export type Database = {
           order_id: string
           prix?: number
           quantity?: number
+          variant_label?: string | null
         }
         Update: {
           article_id?: string | null
@@ -658,6 +687,7 @@ export type Database = {
           order_id?: string
           prix?: number
           quantity?: number
+          variant_label?: string | null
         }
         Relationships: [
           {
@@ -682,8 +712,17 @@ export type Database = {
           buyer_id: string
           buyer_phone: string | null
           created_at: string
+          delivery_address: string | null
+          delivery_fee: number
+          delivery_latitude: number | null
+          delivery_longitude: number | null
+          delivery_notes: string | null
           id: string
+          mode_reception: string
           note: string | null
+          payment_operator: string | null
+          payment_phone: string | null
+          payment_status: string
           seller_user_id: string
           status: string
           total_amount: number
@@ -694,8 +733,17 @@ export type Database = {
           buyer_id: string
           buyer_phone?: string | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_fee?: number
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
+          delivery_notes?: string | null
           id?: string
+          mode_reception?: string
           note?: string | null
+          payment_operator?: string | null
+          payment_phone?: string | null
+          payment_status?: string
           seller_user_id: string
           status?: string
           total_amount?: number
@@ -706,8 +754,17 @@ export type Database = {
           buyer_id?: string
           buyer_phone?: string | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_fee?: number
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
+          delivery_notes?: string | null
           id?: string
+          mode_reception?: string
           note?: string | null
+          payment_operator?: string | null
+          payment_phone?: string | null
+          payment_status?: string
           seller_user_id?: string
           status?: string
           total_amount?: number
@@ -856,6 +913,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          date_naissance: string | null
           email: string
           id: string
           nom: string
@@ -867,6 +925,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          date_naissance?: string | null
           email: string
           id?: string
           nom: string
@@ -878,6 +937,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          date_naissance?: string | null
           email?: string
           id?: string
           nom?: string
@@ -1188,6 +1248,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_addresses: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          label: string
+          latitude: number | null
+          longitude: number | null
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          label: string
+          latitude?: number | null
+          longitude?: number | null
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          label?: string
+          latitude?: number | null
+          longitude?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_loyalty_points: {
         Row: {
           created_at: string
@@ -1319,6 +1409,7 @@ export type Database = {
           troc_contre: string | null
           type_annonce: string
           updated_at: string
+          variants: Json
           views_count: number
           visibility: string
         }[]

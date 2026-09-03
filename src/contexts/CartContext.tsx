@@ -2,6 +2,11 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+export interface ArticleVariant {
+  label: string;
+  prix: number;
+}
+
 export interface CartLine {
   id: string;
   article_id: string;
@@ -12,6 +17,8 @@ export interface CartLine {
   boutique_id: string;
   owner_user_id: string;
   boutique_nom: string;
+  variant_label: string | null;
+  variants: ArticleVariant[];
 }
 
 interface CartContextValue {
@@ -19,8 +26,9 @@ interface CartContextValue {
   count: number;
   total: number;
   loading: boolean;
-  addToCart: (articleId: string, quantity?: number) => Promise<void>;
+  addToCart: (articleId: string, quantity?: number, variant?: ArticleVariant | null) => Promise<void>;
   updateQuantity: (lineId: string, quantity: number) => Promise<void>;
+  updateVariant: (lineId: string, variant: ArticleVariant) => Promise<void>;
   removeLine: (lineId: string) => Promise<void>;
   clearCart: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -32,6 +40,14 @@ export const useCart = () => {
   const ctx = useContext(CartContext);
   if (!ctx) throw new Error('useCart doit être utilisé dans CartProvider');
   return ctx;
+};
+
+const parseVariants = (raw: unknown): ArticleVariant[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((v) => v as { label?: string; prix?: number })
+    .filter((v) => typeof v?.label === 'string')
+    .map((v) => ({ label: v.label as string, prix: Number(v.prix ?? 0) }));
 };
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -47,7 +63,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     const { data } = await supabase
       .from('cart_items')
-      .select('id, article_id, quantity, articles(nom, prix, photo_url, photos, boutique_id, owner_user_id)')
+      .select('id, article_id, quantity, variant_label, variant_prix, articles(nom, prix, photo_url, photos, variants, boutique_id, owner_user_id)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true });
 
@@ -55,8 +71,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: string;
       article_id: string;
       quantity: number;
+      variant_label: string | null;
+      variant_prix: number | null;
       articles: {
-        nom: string; prix: number; photo_url: string | null; photos: string[] | null;
+        nom: string; prix: number; photo_url: string | null; photos: string[] | null; variants: unknown;
         boutique_id: string; owner_user_id: string;
       } | null;
     }>;
@@ -76,11 +94,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           article_id: r.article_id,
           quantity: r.quantity,
           nom: r.articles!.nom,
-          prix: Number(r.articles!.prix),
+          prix: Number(r.variant_prix ?? r.articles!.prix),
           photo: r.articles!.photos?.[0] ?? r.articles!.photo_url,
           boutique_id: r.articles!.boutique_id,
           owner_user_id: r.articles!.owner_user_id,
           boutique_nom: names[r.articles!.boutique_id] || 'Boutique',
+          variant_label: r.variant_label,
+          variants: parseVariants(r.articles!.variants),
         })),
     );
     setLoading(false);
@@ -88,13 +108,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const addToCart = useCallback(async (articleId: string, quantity = 1) => {
+  const addToCart = useCallback(async (articleId: string, quantity = 1, variant?: ArticleVariant | null) => {
     if (!user) throw new Error('Connectez-vous pour utiliser le panier');
-    const existing = items.find((i) => i.article_id === articleId);
+    const label = variant?.label ?? null;
+    const existing = items.find((i) => i.article_id === articleId && i.variant_label === label);
     if (existing) {
       await supabase.from('cart_items').update({ quantity: existing.quantity + quantity }).eq('id', existing.id);
     } else {
-      await supabase.from('cart_items').insert({ user_id: user.id, article_id: articleId, quantity });
+      await supabase.from('cart_items').insert({
+        user_id: user.id,
+        article_id: articleId,
+        quantity,
+        variant_label: label,
+        variant_prix: variant ? variant.prix : null,
+      });
     }
     await refresh();
   }, [user, items, refresh]);
@@ -105,6 +132,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       await supabase.from('cart_items').update({ quantity }).eq('id', lineId);
     }
+    await refresh();
+  }, [refresh]);
+
+  const updateVariant = useCallback(async (lineId: string, variant: ArticleVariant) => {
+    await supabase.from('cart_items').update({ variant_label: variant.label, variant_prix: variant.prix }).eq('id', lineId);
     await refresh();
   }, [refresh]);
 
@@ -126,10 +158,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     addToCart,
     updateQuantity,
+    updateVariant,
     removeLine,
     clearCart,
     refresh,
-  }), [items, loading, addToCart, updateQuantity, removeLine, clearCart, refresh]);
+  }), [items, loading, addToCart, updateQuantity, updateVariant, removeLine, clearCart, refresh]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
