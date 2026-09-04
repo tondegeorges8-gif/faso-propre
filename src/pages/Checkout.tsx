@@ -71,13 +71,13 @@ const Checkout: React.FC = () => {
 
   const createOrders = async (paymentStatus: string) => {
     if (!user) throw new Error('Connectez-vous');
-    const groups = new Map<string, typeof items>();
+    const groups: Record<string, typeof items> = {};
     items.forEach((i) => {
       const key = `${i.owner_user_id}|${i.boutique_id}`;
-      groups.set(key, [...(groups.get(key) || []), i]);
+      groups[key] = [...(groups[key] || []), i];
     });
 
-    for (const [key, lines] of groups) {
+    for (const [key, lines] of Object.entries(groups)) {
       const [sellerId, boutiqueId] = key.split('|');
       const amount = lines.reduce((s, l) => s + l.prix * l.quantity, 0);
       const { data: order, error } = await supabase
