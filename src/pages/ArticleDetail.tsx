@@ -10,6 +10,10 @@ import { useSignedUrls } from '@/hooks/useSignedUrl';
 import { MARKETPLACE_BUCKET } from '@/components/marketplace/PhotoUploader';
 import { ARTICLE_CATEGORIES } from '@/data/burkinaRegions';
 import AvisSection from '@/components/marketplace/AvisSection';
+import VariantSheet from '@/components/marketplace/VariantSheet';
+import { useCart, type ArticleVariant } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 const ETAT_LABEL: Record<string, string> = {
   neuf: 'Neuf',
@@ -33,6 +37,7 @@ interface ArticleDetailData {
   troc_contre: string | null;
   boutique_id: string;
   owner_user_id: string;
+  variants?: unknown;
 }
 
 interface BoutiqueInfo {
@@ -49,6 +54,27 @@ const ArticleDetail: React.FC = () => {
   const [boutique, setBoutique] = useState<BoutiqueInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(0);
+  const [variantOpen, setVariantOpen] = useState(false);
+  const { user } = useAuth();
+  const { addToCart } = useCart();
+
+  const variants: ArticleVariant[] = Array.isArray(article?.variants)
+    ? (article!.variants as Array<{ label?: string; prix?: number }>)
+        .filter((v) => typeof v?.label === 'string')
+        .map((v) => ({ label: v.label as string, prix: Number(v.prix ?? article!.prix) }))
+    : [];
+
+  const handleAdd = async (variant: ArticleVariant | null) => {
+    if (!user) { navigate('/auth'); return; }
+    if (!article) return;
+    try {
+      await addToCart(article.id, 1, variant);
+      setVariantOpen(false);
+      toast({ title: 'Ajouté au panier', description: article.nom });
+    } catch (e) {
+      toast({ title: 'Erreur', description: (e as Error).message, variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -103,7 +129,7 @@ const ArticleDetail: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-40">
       <header className="gradient-hero text-primary-foreground shadow-lg">
         <div className="container mx-auto px-4 py-4 flex items-center gap-3">
           <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate(-1)}>
@@ -135,7 +161,14 @@ const ArticleDetail: React.FC = () => {
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-start justify-between gap-2">
-              <h2 className="text-lg font-bold leading-tight">{article.nom}</h2>
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold leading-tight">{article.nom}</h2>
+                {boutique && (
+                  <button type="button" onClick={() => navigate(`/boutique/${boutique.id}`)} className="text-xs text-primary font-medium underline-offset-2 hover:underline">
+                    {boutique.nom}
+                  </button>
+                )}
+              </div>
               <Badge variant={article.type_annonce === 'troc' ? 'secondary' : 'default'} className="shrink-0">
                 {article.type_annonce === 'troc' ? 'Troc' : 'Vente'}
               </Badge>
@@ -188,6 +221,22 @@ const ArticleDetail: React.FC = () => {
 
         <AvisSection targetType="article" targetId={article.id} />
       </main>
+
+      {article.type_annonce !== 'troc' && (
+        <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-border bg-card px-4 py-3 grid grid-cols-2 gap-2">
+          <Button variant="outline" size="lg" onClick={() => setVariantOpen(true)}>CHOISIR</Button>
+          <Button size="lg" onClick={() => navigate('/panier')}>COMMANDER</Button>
+        </div>
+      )}
+
+      <VariantSheet
+        open={variantOpen}
+        onOpenChange={setVariantOpen}
+        variants={variants}
+        onAdd={handleAdd}
+        basePrice={Number(article.prix)}
+        productName={article.nom}
+      />
 
       <BottomNavigation />
     </div>

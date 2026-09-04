@@ -27,7 +27,7 @@ export interface Article {
 
 const isNew = (d: string) => Date.now() - new Date(d).getTime() < 7 * 24 * 3600 * 1000;
 
-const ArticleCard: React.FC<{ article: Article }> = ({ article }) => {
+const ArticleCard: React.FC<{ article: Article; boutiqueNom?: string }> = ({ article, boutiqueNom }) => {
   const navigate = useNavigate();
   const cover = article.photos?.[0] ?? article.photo_url;
   const url = useSignedUrl(MARKETPLACE_BUCKET, cover);
@@ -57,6 +57,7 @@ const ArticleCard: React.FC<{ article: Article }> = ({ article }) => {
         ) : (
           <p className="font-bold text-primary text-sm">{Number(article.prix).toLocaleString('fr-FR')} FCFA</p>
         )}
+        {boutiqueNom && <p className="text-[11px] font-medium text-primary truncate">{boutiqueNom}</p>}
         {article.region && <p className="text-[11px] text-muted-foreground">Origine : {article.region}</p>}
         <Button size="sm" variant="outline" className="w-full">
           Voir le produit

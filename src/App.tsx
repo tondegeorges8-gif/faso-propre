@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -26,6 +27,10 @@ import AdSubscription from "./pages/AdSubscription";
 import BoutiqueNew from "./pages/BoutiqueNew";
 import ArticleNew from "./pages/ArticleNew";
 import ArticleDetail from "./pages/ArticleDetail";
+import Panier from "./pages/Panier";
+import Checkout from "./pages/Checkout";
+import MaBoutique from "./pages/MaBoutique";
+import BoutiqueDetail from "./pages/BoutiqueDetail";
 
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +40,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
+        <CartProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -63,10 +69,15 @@ const App = () => (
             <Route path="/boutique/nouvelle" element={<BoutiqueNew />} />
             <Route path="/produit/nouveau" element={<ArticleNew />} />
             <Route path="/produit/:id" element={<ArticleDetail />} />
+            <Route path="/panier" element={<Panier />} />
+            <Route path="/commande" element={<Checkout />} />
+            <Route path="/ma-boutique" element={<MaBoutique />} />
+            <Route path="/boutique/:id" element={<BoutiqueDetail />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </CartProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
