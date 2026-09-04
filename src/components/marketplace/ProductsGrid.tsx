@@ -14,6 +14,7 @@ const ProductsGrid: React.FC<{ boutiqueIds?: string[]; search?: string }> = ({ b
   const [categorie, setCategorie] = useState(ALL);
   const [region, setRegion] = useState(ALL);
   const [tri, setTri] = useState('recent');
+  const [boutiqueNames, setBoutiqueNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const load = async () => {
@@ -21,7 +22,15 @@ const ProductsGrid: React.FC<{ boutiqueIds?: string[]; search?: string }> = ({ b
       let query = supabase.from('articles').select('*').eq('is_available', true);
       if (boutiqueIds?.length) query = query.in('boutique_id', boutiqueIds);
       const { data } = await query.order('created_at', { ascending: false }).limit(60);
-      setArticles((data || []) as unknown as Article[]);
+      const list = (data || []) as unknown as Article[];
+      setArticles(list);
+      const ids = [...new Set(list.map((a) => a.boutique_id).filter(Boolean))];
+      if (ids.length) {
+        const { data: bs } = await supabase.from('boutiques').select('id, nom').in('id', ids);
+        const map: Record<string, string> = {};
+        (bs || []).forEach((b) => { map[b.id] = b.nom; });
+        setBoutiqueNames(map);
+      }
       setLoading(false);
     };
     load();
@@ -82,7 +91,7 @@ const ProductsGrid: React.FC<{ boutiqueIds?: string[]; search?: string }> = ({ b
         </Card>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {filtered.map((a) => <ArticleCard key={a.id} article={a} />)}
+          {filtered.map((a) => <ArticleCard key={a.id} article={a} boutiqueNom={boutiqueNames[a.boutique_id]} />)}
         </div>
       )}
     </section>
