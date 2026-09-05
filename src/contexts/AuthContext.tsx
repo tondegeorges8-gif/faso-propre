@@ -10,6 +10,7 @@ export interface Profile {
   prenoms: string;
   telephone: string;
   email: string;
+  date_naissance?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +27,7 @@ interface AuthContextType {
     prenoms: string;
     telephone: string;
     email: string;
+    date_naissance?: string;
     password: string;
   }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
@@ -113,6 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     prenoms: string;
     telephone: string;
     email: string;
+    date_naissance?: string;
     password: string;
   }): Promise<{ success: boolean; error?: string }> => {
     const redirectUrl = `${window.location.origin}/`;
@@ -139,6 +142,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           prenoms: userData.prenoms.trim(),
           telephone: userData.telephone.trim(),
           email: userData.email.trim(),
+          date_naissance: userData.date_naissance || null,
         });
 
       if (profileError) {
