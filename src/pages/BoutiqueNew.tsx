@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import DocumentUploader from '@/components/marketplace/DocumentUploader';
 import { toast } from '@/hooks/use-toast';
 import { ArrowLeft, Megaphone, Store } from 'lucide-react';
 import { BOUTIQUE_CATEGORIES } from '@/data/boutiqueCategories';
@@ -31,6 +33,13 @@ const BoutiqueNew: React.FC = () => {
   const [whatsapp, setWhatsapp] = useState('');
   const [description, setDescription] = useState('');
   const [produits, setProduits] = useState('');
+  const [ownerNom, setOwnerNom] = useState(profile?.nom ?? '');
+  const [ownerPrenoms, setOwnerPrenoms] = useState(profile?.prenoms ?? '');
+  const [ownerDateNaissance, setOwnerDateNaissance] = useState('');
+  const [cnibRecto, setCnibRecto] = useState<string | null>(null);
+  const [cnibVerso, setCnibVerso] = useState<string | null>(null);
+  const [registreCommerce, setRegistreCommerce] = useState<string | null>(null);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [saving, setSaving] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
 
@@ -47,6 +56,10 @@ const BoutiqueNew: React.FC = () => {
     if (!categorie) return toast({ title: 'Corps de métier requis', description: 'Choisissez le secteur de votre boutique.', variant: 'destructive' });
     if (!ville) return toast({ title: 'Ville requise', description: 'Indiquez la ville de votre boutique.', variant: 'destructive' });
     if (phoneError) return toast({ title: 'Téléphone invalide', description: phoneError, variant: 'destructive' });
+    if (!ownerNom.trim() || !ownerPrenoms.trim()) return toast({ title: 'Identité requise', description: 'Indiquez vos nom et prénoms.', variant: 'destructive' });
+    if (!ownerDateNaissance) return toast({ title: 'Date de naissance requise', description: 'Indiquez votre date de naissance.', variant: 'destructive' });
+    if (!cnibRecto || !cnibVerso) return toast({ title: 'CNIB requise', description: 'Ajoutez une photo claire du recto et du verso de votre CNIB.', variant: 'destructive' });
+    if (!acceptTerms) return toast({ title: 'Conditions requises', description: "Vous devez accepter les conditions générales d'utilisation.", variant: 'destructive' });
 
     setSaving(true);
     const allowed = await checkRateLimit('boutique_create', 3, 900);
@@ -69,6 +82,12 @@ const BoutiqueNew: React.FC = () => {
         whatsapp: (whatsapp || telephone).trim(),
         description: description ? sanitizeText(description) : null,
         produits: produits ? sanitizeText(produits) : null,
+        owner_nom: sanitizeText(ownerNom),
+        owner_prenoms: sanitizeText(ownerPrenoms),
+        owner_date_naissance: ownerDateNaissance,
+        cnib_recto_url: cnibRecto,
+        cnib_verso_url: cnibVerso,
+        registre_commerce_url: registreCommerce,
         is_active: true,
       })
       .select('id')
@@ -120,6 +139,28 @@ const BoutiqueNew: React.FC = () => {
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-lg">Informations de la boutique</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Nom (responsable) *</Label>
+                  <Input maxLength={50} value={ownerNom} onChange={(e) => setOwnerNom(e.target.value)} placeholder="Votre nom" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Prénoms *</Label>
+                  <Input maxLength={100} value={ownerPrenoms} onChange={(e) => setOwnerPrenoms(e.target.value)} placeholder="Vos prénoms" />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Date de naissance *</Label>
+                <Input type="date" value={ownerDateNaissance} onChange={(e) => setOwnerDateNaissance(e.target.value)} />
+              </div>
+
+              <div className="space-y-3">
+                <DocumentUploader userId={user!.id} label="CNIB Recto" value={cnibRecto} onChange={setCnibRecto} />
+                <DocumentUploader userId={user!.id} label="CNIB Verso" value={cnibVerso} onChange={setCnibVerso} />
+                <DocumentUploader userId={user!.id} label="Registre de commerce" value={registreCommerce} onChange={setRegistreCommerce} optional />
+              </div>
+
               <div className="space-y-1">
                 <Label>Nom de la boutique *</Label>
                 <Input maxLength={80} value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Ex : Quincaillerie Wend-Kuuni" />
@@ -194,8 +235,13 @@ const BoutiqueNew: React.FC = () => {
                 <Textarea maxLength={600} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Présentez votre boutique en quelques mots…" />
               </div>
 
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox checked={acceptTerms} onCheckedChange={(v) => setAcceptTerms(v === true)} className="mt-0.5" />
+                <span>J'accepte les conditions générales d'utilisation</span>
+              </label>
+
               <Button className="w-full" onClick={submit} disabled={saving}>
-                {saving ? 'Création…' : 'Créer ma boutique'}
+                {saving ? 'Création…' : 'VALIDER LA CRÉATION'}
               </Button>
             </CardContent>
           </Card>

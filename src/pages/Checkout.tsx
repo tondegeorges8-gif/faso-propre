@@ -18,6 +18,7 @@ import { toast } from '@/hooks/use-toast';
 import { useSignedUrls } from '@/hooks/useSignedUrl';
 import { MARKETPLACE_BUCKET } from '@/components/marketplace/PhotoUploader';
 import { cn } from '@/lib/utils';
+import { sendWebhook } from '@/lib/webhook';
 
 const DELIVERY_FEE = 0;
 
@@ -113,6 +114,21 @@ const Checkout: React.FC = () => {
         })),
       );
       if (itemsError) throw itemsError;
+
+      // Notification de confirmation au client et au marchand
+      sendWebhook('order_created', {
+        order_id: order.id,
+        buyer_id: user.id,
+        seller_user_id: sellerId,
+        boutique_id: boutiqueId || null,
+        total_amount: amount,
+        mode_reception: mode,
+        delivery_address: mode === 'livraison' ? place?.address ?? null : null,
+        delivery_notes: mode === 'livraison' ? notes || null : null,
+        payment_operator: operator,
+        payment_status: paymentStatus,
+        items: lines.map((l) => ({ nom: l.nom, variante: l.variant_label, prix: l.prix, quantite: l.quantity })),
+      });
     }
 
     if (mode === 'livraison' && saveAddress && place) {
