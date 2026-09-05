@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, UserPlus, LogIn, Users, Briefcase } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Eye, EyeOff, UserPlus, LogIn, Users, Briefcase, Store } from 'lucide-react';
 import { z } from 'zod';
 
 const logo = '/logo.png';
@@ -19,6 +20,7 @@ const registerSchema = z.object({
   prenoms: z.string().trim().min(2, 'Les prénoms doivent contenir au moins 2 caractères').max(100),
   telephone: z.string().trim().regex(/^\+226\s?\d{2}\s?\d{2}\s?\d{2}\s?\d{2}$/, 'Format: +226 XX XX XX XX'),
   email: z.string().trim().email('Email invalide').max(255),
+  dateNaissance: z.string().min(1, 'La date de naissance est requise'),
   password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -49,6 +51,8 @@ const Auth: React.FC = () => {
   const [telephone, setTelephone] = useState('+226 ');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [dateNaissance, setDateNaissance] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -88,6 +92,7 @@ const Auth: React.FC = () => {
           prenoms,
           telephone,
           email,
+          dateNaissance,
           password,
           confirmPassword,
         });
@@ -102,11 +107,21 @@ const Auth: React.FC = () => {
           return;
         }
 
+        if (!acceptTerms) {
+          toast({
+            title: 'Conditions requises',
+            description: "Vous devez accepter les conditions générales d'utilisation.",
+            variant: 'destructive',
+          });
+          return;
+        }
+
         const result = await register({
           nom: nom.trim(),
           prenoms: prenoms.trim(),
           telephone: telephone.trim(),
           email: email.trim(),
+          date_naissance: dateNaissance,
           password,
         });
 
@@ -193,10 +208,23 @@ const Auth: React.FC = () => {
               <Card className="hover:shadow-lg transition-shadow border-primary/20">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Users size={20} /> Utilisateur (Citoyen)
+                    <Users size={20} /> S'inscrire en tant que client (Citoyen)
                   </CardTitle>
                   <CardDescription>
                     Accès complet : carte des signalements, signalement d'incidents, annuaire des prestataires et Faso Yaar.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </button>
+
+            <button type="button" className="w-full text-left" onClick={() => navigate('/boutique/nouvelle')}>
+              <Card className="hover:shadow-lg transition-shadow border-primary/20">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Store size={20} /> S'inscrire en tant que boutique
+                  </CardTitle>
+                  <CardDescription>
+                    Vendez sur Faso Yaar : créez votre boutique avec vos pièces d'identité et publiez vos produits.
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -281,6 +309,17 @@ const Auth: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="dateNaissance">Date de naissance *</Label>
+                    <Input
+                      id="dateNaissance"
+                      type="date"
+                      value={dateNaissance}
+                      onChange={(e) => setDateNaissance(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="telephone">Numéro de téléphone *</Label>
                     <Input
                       id="telephone"
@@ -355,6 +394,17 @@ const Auth: React.FC = () => {
                 </div>
               )}
 
+              {mode === 'register' && (
+                <label className="flex items-start gap-2 text-sm pt-1">
+                  <Checkbox
+                    checked={acceptTerms}
+                    onCheckedChange={(v) => setAcceptTerms(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span>J'accepte les conditions générales d'utilisation</span>
+                </label>
+              )}
+
               <div className="flex flex-col gap-3 pt-4">
                 <Button 
                   type="submit" 
@@ -369,7 +419,7 @@ const Auth: React.FC = () => {
                   ) : mode === 'register' ? (
                     <span className="flex items-center gap-2">
                       <UserPlus size={18} />
-                      S'inscrire
+                      CRÉER
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">

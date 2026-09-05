@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, ArrowLeft, Store, MapPin, Recycle, MessagesSquare, Wrench, Megaphone } from 'lucide-react';
+import { Search, ArrowLeft, Store, Users, MapPin, Recycle, MessagesSquare, Wrench, Megaphone } from 'lucide-react';
 import PromosFlash from '@/components/marketplace/PromosFlash';
 import ProductsGrid from '@/components/marketplace/ProductsGrid';
 
@@ -138,6 +138,12 @@ const FasoYaar: React.FC = () => {
         {!activeCategorie ? (
           <>
             <div className="grid grid-cols-2 gap-2">
+              <Button variant="secondary" size="sm" className="col-span-1" onClick={() => navigate('/auth')}>
+                <Users size={16} className="mr-1" /> S'inscrire en tant que client
+              </Button>
+              <Button variant="secondary" size="sm" className="col-span-1" onClick={() => navigate('/boutique/nouvelle')}>
+                <Store size={16} className="mr-1" /> S'inscrire en tant que boutique
+              </Button>
               <Button variant="default" size="sm" onClick={() => navigate('/boutique/nouvelle')}>
                 <Store size={16} className="mr-1" /> Créer ma boutique
               </Button>
