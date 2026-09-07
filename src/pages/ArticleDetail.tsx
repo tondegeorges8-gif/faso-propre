@@ -11,6 +11,7 @@ import { MARKETPLACE_BUCKET } from '@/components/marketplace/PhotoUploader';
 import { ARTICLE_CATEGORIES } from '@/data/burkinaRegions';
 import AvisSection from '@/components/marketplace/AvisSection';
 import VariantSheet from '@/components/marketplace/VariantSheet';
+import ImageLightbox from '@/components/marketplace/ImageLightbox';
 import { useCart, type ArticleVariant } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -55,6 +56,7 @@ const ArticleDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(0);
   const [variantOpen, setVariantOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const { user } = useAuth();
   const { addToCart } = useCart();
 
@@ -82,6 +84,7 @@ const ArticleDetail: React.FC = () => {
       const { data } = await supabase.from('articles').select('*').eq('id', id).maybeSingle();
       if (data) {
         setArticle(data as unknown as ArticleDetailData);
+        supabase.rpc('track_article_view', { _article_id: id });
         const { data: b } = await supabase
           .from('boutiques')
           .select('id, nom, ville, quartier, telephone, whatsapp, categorie')
@@ -140,13 +143,17 @@ const ArticleDetail: React.FC = () => {
       </header>
 
       <main className="container mx-auto px-4 py-4 space-y-4">
-        <div className="rounded-xl overflow-hidden bg-muted aspect-square flex items-center justify-center">
+        <button
+          type="button"
+          className="w-full rounded-xl overflow-hidden bg-muted aspect-square flex items-center justify-center"
+          onClick={() => urls[paths[active]] && setLightboxOpen(true)}
+        >
           {urls[paths[active]] ? (
             <img src={urls[paths[active]]} alt={article.nom} className="w-full h-full object-cover" />
           ) : (
             <Package className="text-muted-foreground" size={40} />
           )}
-        </div>
+        </button>
 
         {paths.length > 1 && (
           <div className="flex gap-2 overflow-x-auto">
@@ -215,6 +222,13 @@ const ArticleDetail: React.FC = () => {
               >
                 Message dans l'application
               </Button>
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={() => navigate(`/boutique/${boutique.id}`)}
+              >
+                <Store size={16} className="mr-2" /> VISITER LA BOUTIQUE
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -236,6 +250,13 @@ const ArticleDetail: React.FC = () => {
         onAdd={handleAdd}
         basePrice={Number(article.prix)}
         productName={article.nom}
+      />
+
+      <ImageLightbox
+        src={urls[paths[active]] ?? null}
+        alt={article.nom}
+        open={lightboxOpen}
+        onOpenChange={setLightboxOpen}
       />
 
       <BottomNavigation />

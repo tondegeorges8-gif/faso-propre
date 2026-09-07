@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, ArrowLeft, Store, Users, MapPin, Recycle, MessagesSquare, Wrench, Megaphone } from 'lucide-react';
 import PromosFlash from '@/components/marketplace/PromosFlash';
 import ProductsGrid from '@/components/marketplace/ProductsGrid';
+import AnnoncesGrid from '@/components/marketplace/AnnoncesGrid';
+import { useAuth } from '@/contexts/AuthContext';
 
 
 const ALL = '__all__';
@@ -20,14 +22,22 @@ const ALL = '__all__';
 const FasoYaar: React.FC = () => {
   const navigate = useNavigate();
   const { categorie } = useParams<{ categorie?: string }>();
+  const { user } = useAuth();
 
   const [ville, setVille] = useState<string>(ALL);
   const [quartier, setQuartier] = useState<string>(ALL);
   const [search, setSearch] = useState('');
   const [boutiques, setBoutiques] = useState<Boutique[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasBoutique, setHasBoutique] = useState(false);
 
   const activeCategorie = getBoutiqueCategorie(categorie);
+
+  useEffect(() => {
+    if (!user) { setHasBoutique(false); return; }
+    supabase.from('boutiques').select('id').eq('owner_user_id', user.id).maybeSingle()
+      .then(({ data }) => setHasBoutique(!!data));
+  }, [user]);
 
   useEffect(() => {
     const fetchBoutiques = async () => {
@@ -144,6 +154,11 @@ const FasoYaar: React.FC = () => {
               <Button variant="secondary" size="sm" className="col-span-1" onClick={() => navigate('/boutique/nouvelle')}>
                 <Store size={16} className="mr-1" /> S'inscrire en tant que boutique
               </Button>
+              {hasBoutique && (
+                <Button variant="default" size="sm" className="col-span-2" onClick={() => navigate('/ma-boutique')}>
+                  <Store size={16} className="mr-1" /> Voir ma boutique
+                </Button>
+              )}
               <Button variant="default" size="sm" onClick={() => navigate('/boutique/nouvelle')}>
                 <Store size={16} className="mr-1" /> Créer ma boutique
               </Button>
@@ -164,6 +179,8 @@ const FasoYaar: React.FC = () => {
             <PromosFlash />
 
             <ProductsGrid search={search} />
+
+            <AnnoncesGrid search={search} />
 
             <h2 className="font-semibold text-lg">Catégories de boutiques</h2>
 
