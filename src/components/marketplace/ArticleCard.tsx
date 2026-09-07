@@ -23,6 +23,8 @@ export interface Article {
   troc_contre?: string | null;
   is_available: boolean;
   created_at: string;
+  visibility?: string;
+  boosted_until?: string | null;
 }
 
 const isNew = (d: string) => Date.now() - new Date(d).getTime() < 7 * 24 * 3600 * 1000;

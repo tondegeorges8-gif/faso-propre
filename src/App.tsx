@@ -23,6 +23,7 @@ import PrestataireSignup from "./pages/PrestataireSignup";
 import FasoYaar from "./pages/FasoYaar";
 import Messages from "./pages/Messages";
 import AnnonceNew from "./pages/AnnonceNew";
+import AnnonceDetail from "./pages/AnnonceDetail";
 import AdSubscription from "./pages/AdSubscription";
 import BoutiqueNew from "./pages/BoutiqueNew";
 import ArticleNew from "./pages/ArticleNew";
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/faso-yaar/:categorie" element={<FasoYaar />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/annonces/nouvelle" element={<AnnonceNew />} />
+            <Route path="/annonce/:id" element={<AnnonceDetail />} />
             <Route path="/abonnement-pub" element={<AdSubscription />} />
             <Route path="/boutique/nouvelle" element={<BoutiqueNew />} />
             <Route path="/produit/nouveau" element={<ArticleNew />} />

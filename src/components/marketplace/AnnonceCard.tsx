@@ -28,7 +28,7 @@ const AnnonceCard: React.FC<{ annonce: AnnonceOccasion }> = ({ annonce }) => {
   const isTroc = annonce.type_annonce === 'troc';
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden cursor-pointer" onClick={() => navigate(`/annonce/${annonce.id}`)}>
       <CardContent className="p-3">
         <div className="flex gap-3">
           <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
@@ -63,9 +63,10 @@ const AnnonceCard: React.FC<{ annonce: AnnonceOccasion }> = ({ annonce }) => {
           size="sm"
           variant="outline"
           className="w-full mt-3"
-          onClick={() =>
-            navigate(`/messages?seller=${annonce.user_id}&type=annonce&id=${annonce.id}&subject=${encodeURIComponent(annonce.titre)}`)
-          }
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/messages?seller=${annonce.user_id}&type=annonce&id=${annonce.id}&subject=${encodeURIComponent(annonce.titre)}`);
+          }}
         >
           <MessageCircle size={14} className="mr-1" />
           Contacter le vendeur

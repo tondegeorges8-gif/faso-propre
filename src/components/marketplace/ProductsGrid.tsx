@@ -19,10 +19,24 @@ const ProductsGrid: React.FC<{ boutiqueIds?: string[]; search?: string }> = ({ b
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      let query = supabase.from('articles').select('*').eq('is_available', true);
-      if (boutiqueIds?.length) query = query.in('boutique_id', boutiqueIds);
-      const { data } = await query.order('created_at', { ascending: false }).limit(60);
-      const list = (data || []) as unknown as Article[];
+      let list: Article[];
+      if (boutiqueIds?.length) {
+        // Vue boutique : tous les produits de la boutique
+        const { data } = await supabase
+          .from('articles').select('*').eq('is_available', true)
+          .in('boutique_id', boutiqueIds)
+          .order('created_at', { ascending: false }).limit(60);
+        list = (data || []) as unknown as Article[];
+      } else {
+        // Flux public : visibilité restreinte — produits boostés + petit échantillon organique
+        const { data } = await supabase.rpc('get_marketplace_articles', { _limited_sample: 6 });
+        list = ((data || []) as unknown as Article[]).sort((a, b) => {
+          const ab = a.visibility === 'boosted' ? 1 : 0;
+          const bb = b.visibility === 'boosted' ? 1 : 0;
+          if (ab !== bb) return bb - ab;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+      }
       setArticles(list);
       const ids = [...new Set(list.map((a) => a.boutique_id).filter(Boolean))];
       if (ids.length) {
