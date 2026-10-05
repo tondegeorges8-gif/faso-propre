@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import PaymentOperators from '@/components/payments/PaymentOperators';
 import { Smartphone, AlertCircle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -15,7 +15,7 @@ interface WithdrawalFormProps {
 const WithdrawalForm: React.FC<WithdrawalFormProps> = ({ currentBalance, onWithdraw }) => {
   const [amount, setAmount] = useState('');
   const [phone, setPhone] = useState('');
-  const [network, setNetwork] = useState('orange_money');
+  const [network, setNetwork] = useState('ORANGE_MONEY');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const formatMoney = (amount: number) => {
@@ -79,57 +79,7 @@ const WithdrawalForm: React.FC<WithdrawalFormProps> = ({ currentBalance, onWithd
           {/* Network Selection */}
           <div className="space-y-2">
             <Label>Réseau de paiement</Label>
-            <RadioGroup 
-              value={network} 
-              onValueChange={setNetwork}
-              className="grid grid-cols-2 gap-3"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="orange_money" id="orange" />
-                <Label htmlFor="orange" className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                    OM
-                  </div>
-                  <span className="text-sm">Orange Money</span>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="moov_money" id="moov" />
-                <Label htmlFor="moov" className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                    MM
-                  </div>
-                  <span className="text-sm">Moov Money</span>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="telecel_faso" id="telecel" />
-                <Label htmlFor="telecel" className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                    TF
-                  </div>
-                  <span className="text-sm">Telecel Faso</span>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="wave_burkina" id="wave" />
-                <Label htmlFor="wave" className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                    WV
-                  </div>
-                  <span className="text-sm">Wave Burkina</span>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 col-span-2">
-                <RadioGroupItem value="coris_bank" id="coris" />
-                <Label htmlFor="coris" className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-8 h-8 bg-emerald-700 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                    CB
-                  </div>
-                  <span className="text-sm">Coris Bank International</span>
-                </Label>
-              </div>
-            </RadioGroup>
+            <PaymentOperators value={network} onChange={setNetwork} />
           </div>
 
           {/* Phone Number */}
@@ -188,7 +138,6 @@ const WithdrawalForm: React.FC<WithdrawalFormProps> = ({ currentBalance, onWithd
             <p>
               Les retraits sont traités dans un délai de 24h ouvrées. 
               Assurez-vous que le numéro correspond au réseau sélectionné.
-              Pour Coris Bank, entrez votre numéro de compte.
             </p>
           </div>
         </form>
