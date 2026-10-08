@@ -125,7 +125,7 @@ const MaBoutique: React.FC = () => {
                 <Button variant="outline" size="sm" onClick={() => navigate(`/boutique/${boutique.id}`)}>
                   Voir la vitrine publique
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/espace-pub')}>
+                <Button variant="outline" size="sm" onClick={() => navigate('/abonnement-pub')}>
                   <Megaphone size={14} className="mr-1" /> Espace pub
                 </Button>
               </div>
