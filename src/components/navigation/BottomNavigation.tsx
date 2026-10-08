@@ -1,6 +1,6 @@
  import React from 'react';
  import { useNavigate, useLocation } from 'react-router-dom';
- import { Home, Plus, Store, ShoppingCart, User } from 'lucide-react';
+ import { Home, Plus, Store, ShoppingCart, User, Clock } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
  import { cn } from '@/lib/utils';
  
@@ -13,6 +13,7 @@ import { useCart } from '@/contexts/CartContext';
  const navItems: NavItem[] = [
    { icon: Home, label: 'Accueil', path: '/dashboard' },
    { icon: Plus, label: 'Signaler', path: '/new-report' },
+   { icon: Clock, label: 'Historique', path: '/reports' },
    { icon: Store, label: 'Faso Yaar', path: '/faso-yaar' },
    { icon: ShoppingCart, label: 'Panier', path: '/panier' },
    { icon: User, label: 'Profil', path: '/profile' },
@@ -35,7 +36,7 @@ import { useCart } from '@/contexts/CartContext';
                key={item.path}
                onClick={() => navigate(item.path)}
                className={cn(
-                 "flex flex-col items-center justify-center flex-1 h-full py-2 px-3 transition-colors",
+                 "flex flex-col items-center justify-center flex-1 h-full py-2 px-1 transition-colors",
                  isActive 
                    ? "text-primary" 
                    : "text-muted-foreground hover:text-foreground"
@@ -56,7 +57,7 @@ import { useCart } from '@/contexts/CartContext';
                  )}
                </span>
                <span className={cn(
-                 "text-xs font-medium",
+                 "text-[10px] font-medium",
                  isActive && "font-semibold"
                )}>
                  {item.label}

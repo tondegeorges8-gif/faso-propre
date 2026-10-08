@@ -32,6 +32,7 @@ export const APP_CONFIG = {
       path: "/profile",
       description: "Profil utilisateur, fidélité et paramètres."
     },
+    { name: "Historique", path: "/reports", description: "Historique et suivi des signalements." },
     // Ajoute tes futurs onglets/sections simplement ici en respectant le format :
     // { name: "Nom", path: "/chemin", description: "Ce que ça fait" }
   ]
