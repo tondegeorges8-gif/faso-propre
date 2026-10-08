@@ -61,9 +61,35 @@ const ArticleCard: React.FC<{ article: Article; boutiqueNom?: string }> = ({ art
         )}
         {boutiqueNom && <p className="text-[11px] font-medium text-primary truncate">{boutiqueNom}</p>}
         {article.region && <p className="text-[11px] text-muted-foreground">Origine : {article.region}</p>}
-        <Button size="sm" variant="outline" className="w-full">
-          Voir le produit
-        </Button>
+        {article.type_annonce === 'troc' ? (
+          <Button size="sm" variant="outline" className="w-full">
+            Voir le produit
+          </Button>
+        ) : (
+          <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full px-2 text-xs"
+              onClick={(event) => {
+                event.stopPropagation();
+                navigate(`/produit/${article.id}?choisir=1`);
+              }}
+            >
+              CHOISIR
+            </Button>
+            <Button
+              size="sm"
+              className="w-full px-2 text-xs"
+              onClick={(event) => {
+                event.stopPropagation();
+                navigate('/panier');
+              }}
+            >
+              COMMANDER
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
