@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import { Button } from '@/components/ui/button';
@@ -51,19 +51,20 @@ const cleanPhone = (p: string) => p.replace(/[^\d]/g, '');
 const ArticleDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [article, setArticle] = useState<ArticleDetailData | null>(null);
   const [boutique, setBoutique] = useState<BoutiqueInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(0);
-  const [variantOpen, setVariantOpen] = useState(false);
+  const [variantOpen, setVariantOpen] = useState(searchParams.get('choisir') === '1');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const { user } = useAuth();
   const { addToCart } = useCart();
 
-  const variants: ArticleVariant[] = Array.isArray(article?.variants)
-    ? (article!.variants as Array<{ label?: string; prix?: number }>)
+  const variants: ArticleVariant[] = article && Array.isArray(article.variants)
+    ? (article.variants as Array<{ label?: string; prix?: number }>)
         .filter((v) => typeof v?.label === 'string')
-        .map((v) => ({ label: v.label as string, prix: Number(v.prix ?? article!.prix) }))
+        .map((v) => ({ label: v.label as string, prix: Number(v.prix ?? article.prix) }))
     : [];
 
   const handleAdd = async (variant: ArticleVariant | null) => {
@@ -237,7 +238,7 @@ const ArticleDetail: React.FC = () => {
       </main>
 
       {article.type_annonce !== 'troc' && (
-        <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-border bg-card px-4 py-3 grid grid-cols-2 gap-2">
+        <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 border-t border-border bg-card px-4 py-3 grid grid-cols-2 gap-2" aria-label="Actions d’achat">
           <Button variant="outline" size="lg" onClick={() => setVariantOpen(true)}>CHOISIR</Button>
           <Button size="lg" onClick={() => navigate('/panier')}>COMMANDER</Button>
         </div>
