@@ -10,4 +10,4 @@
 - [x] Accès aux autres annonces d'un vendeur dans Vente / Troquer
 - [x] Uniformiser Orange Money, Moov Africa et Wave dans tous les écrans transactionnels
 - [x] Audit des sections manquantes + parcours client Faso Yaar (Partie 1)
-- [ ] Afficher CHOISIR et COMMANDER directement sur les produits et vérifier leur accès.
+- [x] Afficher CHOISIR et COMMANDER directement sur les produits et vérifier leur accès.
