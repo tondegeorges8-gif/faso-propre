@@ -8,4 +8,5 @@
 - [x] Clic sur l'image d'un produit/annonce pour l'ouvrir en grand format
 - [x] Bouton « Visiter la boutique » sur la fiche produit
 - [x] Accès aux autres annonces d'un vendeur dans Vente / Troquer
-- [ ] Uniformiser Orange Money, Moov Africa et Wave dans tous les écrans transactionnels
+- [x] Uniformiser Orange Money, Moov Africa et Wave dans tous les écrans transactionnels
+- [x] Audit des sections manquantes + parcours client Faso Yaar (Partie 1)
