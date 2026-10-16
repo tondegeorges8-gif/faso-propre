@@ -11,3 +11,8 @@
 - [x] Uniformiser Orange Money, Moov Africa et Wave dans tous les écrans transactionnels
 - [x] Audit des sections manquantes + parcours client Faso Yaar (Partie 1)
 - [x] Afficher CHOISIR et COMMANDER directement sur les produits et vérifier leur accès.
+
+## Retrait réversible
+- [ ] Retirer annuaire, Faso Yaar, panier et accès associés sans supprimer leurs données.
+- [ ] Conserver les versions originales et les consignes de restauration.
+- [ ] Vérifier les accès et la navigation après retrait.
