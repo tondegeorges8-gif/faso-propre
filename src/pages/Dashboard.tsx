@@ -14,6 +14,7 @@ import BottomNavigation from '@/components/navigation/BottomNavigation';
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload';
 import BurkinaCleanlinessMap from '@/components/map/BurkinaCleanlinessMap';
 import InstitutionBreakdown from '@/components/institutions/InstitutionBreakdown';
+import { FEATURE_AVAILABILITY } from '@/config/retiredFeatures';
 import { METIERS } from '@/data/metiers';
 import InstitutionTracking from '@/components/institutions/InstitutionTracking';
 
@@ -243,7 +244,7 @@ const Dashboard: React.FC = () => {
         </Card>
 
         {/* Annuaire des prestataires */}
-        <Card className="shadow-card">
+        {FEATURE_AVAILABILITY.prestataires && <Card className="shadow-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Annuaire des prestataires</CardTitle>
           </CardHeader>
@@ -264,7 +265,7 @@ const Dashboard: React.FC = () => {
               Voir tout l'annuaire
             </Button>
           </CardContent>
-        </Card>
+        </Card>}
 
         {/* Reports per institution */}
         <InstitutionBreakdown counts={institutionCounts} />

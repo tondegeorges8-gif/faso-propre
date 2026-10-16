@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, UserPlus, LogIn, Users, Briefcase, Store } from 'lucide-react';
+import { FEATURE_AVAILABILITY } from '@/config/retiredFeatures';
 import { z } from 'zod';
 
 const logo = '/logo.png';
@@ -208,16 +209,16 @@ const Auth: React.FC = () => {
               <Card className="hover:shadow-lg transition-shadow border-primary/20">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Users size={20} /> S'inscrire en tant que client (Citoyen)
+                    <Users size={20} /> {FEATURE_AVAILABILITY.fasoYaar ? "S'inscrire en tant que client (Citoyen)" : "S'inscrire en tant que citoyen"}
                   </CardTitle>
                   <CardDescription>
-                    Accès complet : carte des signalements, signalement d'incidents, annuaire des prestataires et Faso Yaar.
+                    {FEATURE_AVAILABILITY.fasoYaar ? "Accès complet : carte des signalements, signalement d'incidents, annuaire des prestataires et Faso Yaar." : "Carte des signalements, signalement d'incidents et suivi de vos signalements."}
                   </CardDescription>
                 </CardHeader>
               </Card>
             </button>
 
-            <button type="button" className="w-full text-left" onClick={() => navigate('/boutique/nouvelle')}>
+            {FEATURE_AVAILABILITY.fasoYaar && <button type="button" className="w-full text-left" onClick={() => navigate('/boutique/nouvelle')}>
               <Card className="hover:shadow-lg transition-shadow border-primary/20">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -228,9 +229,9 @@ const Auth: React.FC = () => {
                   </CardDescription>
                 </CardHeader>
               </Card>
-            </button>
+            </button>}
 
-            <button type="button" className="w-full text-left" onClick={() => navigate('/prestataire/inscription')}>
+            {FEATURE_AVAILABILITY.prestataires && <button type="button" className="w-full text-left" onClick={() => navigate('/prestataire/inscription')}>
               <Card className="hover:shadow-lg transition-shadow border-primary/20">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -242,7 +243,7 @@ const Auth: React.FC = () => {
                   </CardDescription>
                 </CardHeader>
               </Card>
-            </button>
+            </button>}
 
             <Button variant="outline" className="w-full" onClick={() => setMode('login')}>
               <LogIn size={18} className="mr-2" />

@@ -1,4 +1,5 @@
 // src/config/appConfig.ts
+import { FEATURE_AVAILABILITY } from "./retiredFeatures";
 
 export const APP_CONFIG = {
   appName: "Faso Propre",
@@ -17,16 +18,16 @@ export const APP_CONFIG = {
       path: "/new-report",
       description: "Permet aux citoyens de signaler un problème urbain avec géolocalisation intégrée."
     },
-    {
+    ...(FEATURE_AVAILABILITY.fasoYaar ? [{
       name: "Faso Yaar",
       path: "/faso-yaar",
       description: "Le marché local et commercial de l'application."
-    },
-    {
+    }] : []),
+    ...(FEATURE_AVAILABILITY.panier ? [{
       name: "Panier",
       path: "/panier",
       description: "Panier d'achat et commandes groupées."
-    },
+    }] : []),
     {
       name: "Profil",
       path: "/profile",
