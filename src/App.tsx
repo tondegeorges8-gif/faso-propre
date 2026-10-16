@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { FEATURE_AVAILABILITY } from "@/config/retiredFeatures";
 import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -37,11 +38,14 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const OptionalCartProvider = ({ children }: { children: React.ReactNode }) =>
+  FEATURE_AVAILABILITY.panier ? <CartProvider>{children}</CartProvider> : <>{children}</>;
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <CartProvider>
+        <OptionalCartProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -58,29 +62,33 @@ const App = () => (
             <Route path="/loyalty" element={<LoyaltyPage />} />
             <Route path="/sponsors" element={<SponsorsAdmin />} />
             <Route path="/profile" element={<Profile />} />
+            {FEATURE_AVAILABILITY.prestataires && <>
             <Route path="/prestataires" element={<Prestataires />} />
             <Route path="/admin/prestataires" element={<PrestatairesAdmin />} />
             <Route path="/prestataires/fiche/:id" element={<PrestataireProfile />} />
             <Route path="/prestataires/:metier" element={<Prestataires />} />
             <Route path="/prestataire/inscription" element={<PrestataireSignup />} />
+            </>}
+            {FEATURE_AVAILABILITY.fasoYaar && <>
             <Route path="/faso-yaar" element={<FasoYaar />} />
             <Route path="/faso-yaar/:categorie" element={<FasoYaar />} />
-            <Route path="/messages" element={<Messages />} />
             <Route path="/annonces/nouvelle" element={<AnnonceNew />} />
             <Route path="/annonce/:id" element={<AnnonceDetail />} />
             <Route path="/abonnement-pub" element={<AdSubscription />} />
             <Route path="/boutique/nouvelle" element={<BoutiqueNew />} />
             <Route path="/produit/nouveau" element={<ArticleNew />} />
             <Route path="/produit/:id" element={<ArticleDetail />} />
-            <Route path="/panier" element={<Panier />} />
-            <Route path="/commande" element={<Checkout />} />
+            {FEATURE_AVAILABILITY.panier && <Route path="/panier" element={<Panier />} />}
+            {FEATURE_AVAILABILITY.panier && <Route path="/commande" element={<Checkout />} />}
             <Route path="/ma-boutique" element={<MaBoutique />} />
             <Route path="/boutique/:id" element={<BoutiqueDetail />} />
 
+            </>}
+            <Route path="/messages" element={<Messages />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-        </CartProvider>
+        </OptionalCartProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

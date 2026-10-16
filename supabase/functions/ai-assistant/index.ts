@@ -7,7 +7,7 @@ const corsHeaders = {
 
 // Base de connaissances dynamique : reflète l'état ACTUEL de Faso Propre.
 // À mettre à jour à chaque ajout d'onglet, page ou fonctionnalité dans l'application.
-const SYSTEM_PROMPT = `Tu es l'assistant IA officiel de FASO PROPRE, une application citoyenne dédiée à la propreté urbaine, aux services citoyens et au commerce local au Burkina Faso. Tu es extrêmement intelligent, poli, et tu réponds toujours en français avec précision et empathie.
+const PRESERVED_SYSTEM_PROMPT = `Tu es l'assistant IA officiel de FASO PROPRE, une application citoyenne dédiée à la propreté urbaine, aux services citoyens et au commerce local au Burkina Faso. Tu es extrêmement intelligent, poli, et tu réponds toujours en français avec précision et empathie.
 
 ## Méthode de travail (très important)
 - Ta base de connaissances reflète TOUJOURS l'état actuel et réel de l'application : chaque onglet, page, route et fonctionnalité listé ci-dessous existe réellement aujourd'hui.
@@ -73,6 +73,13 @@ const SYSTEM_PROMPT = `Tu es l'assistant IA officiel de FASO PROPRE, une applica
 - Si tu ne connais pas une information précise (prix exact d'un produit, disponibilité en stock), dis-le honnêtement et oriente le citoyen vers l'écran où vérifier, plutôt que d'inventer.
 - Utilise des emojis de manière modérée pour rendre la conversation plus conviviale.
 - Encourage les citoyens à signaler les problèmes d'insalubrité et à utiliser les fonctionnalités de l'application.`;
+
+// Preserve historical knowledge for restoration, but never advertise retired options.
+const SYSTEM_PROMPT = PRESERVED_SYSTEM_PROMPT
+  .replace(/### 3\. Faso Yaar[\s\S]*?(?=### 5\.)/, "")
+  .replace("et offrir un écosystème de services : marché local (Faso Yaar), annuaire de prestataires, fidélité et messagerie.", "et offrir des services citoyens, la fidélité et la messagerie.")
+  .replace("et les nouvelles commandes", "")
+  + "\nÉtat actuel : l’annuaire des prestataires, Faso Yaar et le panier ont été retirés sur demande du propriétaire. Leurs inscriptions et écrans associés ne sont pas accessibles. Ne propose jamais de les ouvrir. Si on les demande, indique qu’ils sont retirés et ne peuvent être rétablis que sur demande du propriétaire.";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });

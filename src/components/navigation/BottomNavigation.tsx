@@ -1,6 +1,7 @@
  import React from 'react';
  import { useNavigate, useLocation } from 'react-router-dom';
  import { Home, Plus, Store, ShoppingCart, User, Clock } from 'lucide-react';
+import { FEATURE_AVAILABILITY } from '@/config/retiredFeatures';
 import { useCart } from '@/contexts/CartContext';
  import { cn } from '@/lib/utils';
  
@@ -14,15 +15,15 @@ import { useCart } from '@/contexts/CartContext';
    { icon: Home, label: 'Accueil', path: '/dashboard' },
    { icon: Plus, label: 'Signaler', path: '/new-report' },
    { icon: Clock, label: 'Historique', path: '/reports' },
-   { icon: Store, label: 'Faso Yaar', path: '/faso-yaar' },
-   { icon: ShoppingCart, label: 'Panier', path: '/panier' },
+   ...(FEATURE_AVAILABILITY.fasoYaar ? [{ icon: Store, label: 'Faso Yaar', path: '/faso-yaar' }] : []),
+   ...(FEATURE_AVAILABILITY.panier ? [{ icon: ShoppingCart, label: 'Panier', path: '/panier' }] : []),
    { icon: User, label: 'Profil', path: '/profile' },
  ];
  
  const BottomNavigation: React.FC = () => {
    const navigate = useNavigate();
    const location = useLocation();
-  const { count } = useCart();
+
  
    return (
      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 safe-area-bottom">
@@ -50,11 +51,7 @@ import { useCart } from '@/contexts/CartContext';
                      isActive && "scale-110"
                    )}
                  />
-                 {item.path === '/panier' && count > 0 && (
-                   <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
-                     {count}
-                   </span>
-                 )}
+                 {item.path === '/panier' && FEATURE_AVAILABILITY.panier && <CartBadge />}
                </span>
                <span className={cn(
                  "text-[10px] font-medium",
@@ -71,3 +68,9 @@ import { useCart } from '@/contexts/CartContext';
  };
  
  export default BottomNavigation;
+const CartBadge = () => {
+  const { count } = useCart();
+  return count > 0 ? (
+    <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">{count}</span>
+  ) : null;
+};
