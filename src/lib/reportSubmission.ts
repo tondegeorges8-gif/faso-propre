@@ -111,6 +111,6 @@ export async function syncOfflineReports(onSynced?: (n: number) => void) {
 export const URGENCES: { value: Urgence; label: string; cls: string }[] = [
   { value: 'faible', label: 'Faible', cls: 'border-status-resolved text-status-resolved' },
   { value: 'normale', label: 'Normale', cls: 'border-status-pending text-status-pending' },
-  { value: 'elevee', label: 'Élevée', cls: 'border-status-in-progress text-status-in-progress' },
+  { value: 'elevee', label: 'Élevée', cls: 'border-status-progress text-status-progress' },
   { value: 'danger', label: 'Danger immédiat', cls: 'border-destructive text-destructive' },
 ];
