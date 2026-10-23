@@ -4,299 +4,192 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { INSTITUTIONS } from '@/data/institutions';
-import { WEBHOOK_URL } from '@/lib/webhook';
-import GPSCapture from '@/components/location/GPSCapture';
 import OnboardingGuide from '@/components/onboarding/OnboardingGuide';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  ArrowLeft, 
-  Camera, 
-  Send,
-  Trash2,
-  HelpCircle,
-  Mic,
-  Square,
-  X
-} from 'lucide-react';
+import ReportMap from '@/components/location/ReportMap';
+import { reverseGeocode } from '@/components/marketplace/MapPicker';
+import { submitReport, enqueueReport, syncOfflineReports, getQueue, URGENCES, type Urgence, type ReportDraft } from '@/lib/reportSubmission';
+import { ArrowLeft, Camera, Send, X, HelpCircle, Mic, Square, Crosshair, Loader2, WifiOff, MapPin } from 'lucide-react';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 
 const logo = '/logo.png';
+const MAX_PHOTOS = 5;
+const MAX_AUDIO_SEC = 30;
+
+const readAsDataUrl = (b: Blob) => new Promise<string>((res, rej) => {
+  const r = new FileReader(); r.onloadend = () => res(r.result as string); r.onerror = rej; r.readAsDataURL(b);
+});
+
+const Step: React.FC<{ n: number; title: string; desc: string; done: boolean; children: React.ReactNode }> = ({ n, title, desc, done, children }) => (
+  <Card className="shadow-card animate-slide-up">
+    <CardHeader className="pb-3">
+      <CardTitle className="text-lg flex items-center gap-2">
+        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm ${done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{n}</span>
+        {title}
+      </CardTitle>
+      <CardDescription>{desc}</CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-4">{children}</CardContent>
+  </Card>
+);
 
 const NewReport: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Form state
+  const [online, setOnline] = useState(navigator.onLine);
+  const [pending, setPending] = useState(getQueue().length);
+
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
   const [description, setDescription] = useState('');
-  const [photo, setPhoto] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [adresse, setAdresse] = useState('');
+  const [repere, setRepere] = useState('');
+  const [urgence, setUrgence] = useState<Urgence>('normale');
+
   const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [recSeconds, setRecSeconds] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<number | null>(null);
+  const geocodeTimer = useRef<number | null>(null);
+
+  useEffect(() => { if (!authLoading && !isAuthenticated) navigate('/auth'); }, [isAuthenticated, authLoading, navigate]);
+  useEffect(() => { if (!localStorage.getItem('faso_propre_onboarding_seen')) setShowOnboarding(true); }, []);
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/auth');
-    }
-  }, [isAuthenticated, authLoading, navigate]);
+    const synced = (n: number) => {
+      setPending(getQueue().length);
+      toast({ title: 'Synchronisation réussie', description: `${n} signalement(s) hors-ligne envoyé(s).` });
+    };
+    const goOnline = () => { setOnline(true); syncOfflineReports(synced); };
+    const goOffline = () => setOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    if (isAuthenticated) syncOfflineReports(synced);
+    return () => { window.removeEventListener('online', goOnline); window.removeEventListener('offline', goOffline); };
+  }, [isAuthenticated, toast]);
 
-  useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('faso_propre_onboarding_seen');
-    if (!hasSeenOnboarding) {
-      setShowOnboarding(true);
+  const updateAddressFor = (lat: number, lng: number) => {
+    if (!navigator.onLine) return;
+    if (geocodeTimer.current) window.clearTimeout(geocodeTimer.current);
+    geocodeTimer.current = window.setTimeout(async () => setAdresse(await reverseGeocode(lat, lng)), 600);
+  };
+
+  const detectPosition = () => {
+    if (!navigator.geolocation) {
+      toast({ title: 'GPS indisponible', variant: 'destructive' });
+      return;
     }
-  }, []);
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude); setLongitude(pos.coords.longitude);
+        setAccuracy(Math.round(pos.coords.accuracy)); setLocating(false);
+        updateAddressFor(pos.coords.latitude, pos.coords.longitude);
+        toast({ title: 'Position détectée', description: `Précision ±${Math.round(pos.coords.accuracy)} m` });
+      },
+      () => { setLocating(false); toast({ title: 'Position introuvable', description: 'Autorisez la localisation.', variant: 'destructive' }); },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  };
+
+  const onMarkerMove = (lat: number, lng: number) => {
+    setLatitude(lat); setLongitude(lng); setAccuracy(null);
+    updateAddressFor(lat, lng);
+  };
+
+  const handlePhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    const room = MAX_PHOTOS - photos.length;
+    if (files.length > room) toast({ title: 'Maximum 5 photos', description: `Seules ${room} photo(s) ont été ajoutées.` });
+    const added: string[] = [];
+    for (const f of files.slice(0, room)) {
+      if (f.size > 5 * 1024 * 1024) { toast({ title: 'Photo trop lourde', description: `${f.name} dépasse 5 Mo`, variant: 'destructive' }); continue; }
+      added.push(await readAsDataUrl(f));
+    }
+    setPhotos((p) => [...p, ...added]);
+  };
+
+  const stopRecording = () => {
+    if (timerRef.current) { window.clearInterval(timerRef.current); timerRef.current = null; }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') mediaRecorderRef.current.stop();
+    setIsRecording(false);
+  };
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
+      const mr = new MediaRecorder(stream);
+      mediaRecorderRef.current = mr; audioChunksRef.current = [];
+      mr.ondataavailable = (ev) => { if (ev.data.size > 0) audioChunksRef.current.push(ev.data); };
+      mr.onstop = async () => {
         const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        setAudioBlob(blob);
-        setAudioUrl(URL.createObjectURL(blob));
-        stream.getTracks().forEach(track => track.stop());
+        setAudioUrl(await readAsDataUrl(blob));
+        stream.getTracks().forEach((t) => t.stop());
       };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-      toast({
-        title: 'Erreur',
-        description: "Impossible d'accéder au microphone. Vérifiez les permissions.",
-        variant: 'destructive',
-      });
+      mr.start(); setIsRecording(true); setRecSeconds(0);
+      timerRef.current = window.setInterval(() => {
+        setRecSeconds((s) => {
+          if (s + 1 >= MAX_AUDIO_SEC) { stopRecording(); return MAX_AUDIO_SEC; }
+          return s + 1;
+        });
+      }, 1000);
+    } catch {
+      toast({ title: 'Erreur', description: "Impossible d'accéder au microphone.", variant: 'destructive' });
     }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  };
-
-  const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: 'Fichier trop volumineux',
-        description: 'La photo ne doit pas dépasser 5 Mo',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setPhotoFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPhoto(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleGPSCapture = (lat: number, lng: number) => {
-    setLatitude(lat);
-    setLongitude(lng);
-    toast({
-      title: 'Position capturée',
-      description: 'Vos coordonnées GPS ont été enregistrées',
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!user || !profile) {
-      toast({
-        title: 'Erreur',
-        description: 'Vous devez être connecté',
-        variant: 'destructive',
-      });
+    if (!user || !profile) return;
+    if (!category || !subcategory || photos.length === 0) {
+      toast({ title: 'Champs obligatoires', description: 'Catégorie, type et au moins une photo.', variant: 'destructive' });
       return;
     }
+    const draft: ReportDraft = {
+      category, subcategory, description, photos, audio: audioUrl, latitude, longitude, accuracy,
+      adresse, repere, urgence, submittedAt: new Date().toISOString(),
+      nomComplet: `${profile.prenoms} ${profile.nom}`, telephone: (profile as any).telephone,
+    };
 
-    if (!category || !subcategory || !photo) {
-      toast({
-        title: 'Champs obligatoires',
-        description: 'Veuillez remplir tous les champs obligatoires et ajouter une photo',
-        variant: 'destructive',
-      });
+    if (!navigator.onLine) {
+      try {
+        enqueueReport(draft); setPending(getQueue().length);
+        toast({ title: 'Enregistré hors-ligne', description: 'Il sera envoyé automatiquement au retour du réseau.' });
+        navigate('/dashboard');
+      } catch {
+        toast({ title: 'Stockage plein', description: 'Retirez des photos et réessayez.', variant: 'destructive' });
+      }
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      let photoUrl = '';
-      let audioStorageUrl: string | null = null;
-
-      // Upload photo to storage
-      if (photoFile) {
-        const fileExt = photoFile.name.split('.').pop();
-        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('signalements-photos')
-          .upload(fileName, photoFile);
-
-        if (uploadError) {
-          throw new Error('Erreur lors de l\'upload de la photo');
-        }
-        photoUrl = fileName;
-      }
-
-      // Upload audio to storage
-      if (audioBlob) {
-        const audioFileName = `${user.id}/${crypto.randomUUID()}.webm`;
-        
-        const { error: audioUploadError } = await supabase.storage
-          .from('signalements-audio')
-          .upload(audioFileName, audioBlob, { contentType: 'audio/webm' });
-
-        if (audioUploadError) {
-          console.error('Audio upload error:', audioUploadError);
-        } else {
-          audioStorageUrl = audioFileName;
-        }
-      }
-
-      const nomComplet = `${profile.prenoms} ${profile.nom}`;
-      
-      const { error } = await supabase
-        .from('signalements')
-        .insert({
-          user_id: user.id,
-          nom_complet: nomComplet,
-          category,
-          subcategory,
-          ville: 'Non spécifiée',
-          arrondissement: null,
-          secteur: null,
-          quartier: null,
-          sous_quartier: null,
-          description: description || null,
-          photo_url: photoUrl,
-          audio_url: audioStorageUrl,
-          latitude,
-          longitude,
-          status: 'PENDING',
-          statut_paiement: 'en_attente',
-          montant_total: 0,
-          commission_montant: 0,
-        } as any);
-
-      if (error) {
-        throw error;
-      }
-
-      // Forward to external webhook (Google Apps Script) - fire and forget
-      try {
-        const institutionNom = INSTITUTIONS[category as keyof typeof INSTITUTIONS]?.nom || category;
-
-        // Générer des URLs signées (1 an) pour que WhatsApp puisse afficher les médias
-        const ONE_YEAR = 60 * 60 * 24 * 365;
-        let photoSignedUrl = '';
-        let audioSignedUrl = '';
-        let avatarSignedUrl = '';
-        if (photoUrl) {
-          const { data } = await supabase.storage
-            .from('signalements-photos')
-            .createSignedUrl(photoUrl, ONE_YEAR);
-          photoSignedUrl = data?.signedUrl || '';
-        }
-        if (audioStorageUrl) {
-          const { data } = await supabase.storage
-            .from('signalements-audio')
-            .createSignedUrl(audioStorageUrl, ONE_YEAR);
-          audioSignedUrl = data?.signedUrl || '';
-        }
-        const avatarPath = (profile as any).avatar_url as string | null;
-        if (avatarPath) {
-          const { data } = await supabase.storage
-            .from('avatars')
-            .createSignedUrl(avatarPath, ONE_YEAR);
-          avatarSignedUrl = data?.signedUrl || '';
-        }
-
-        const lieuTxt = latitude && longitude
-          ? `https://www.google.com/maps?q=${latitude},${longitude}`
-          : 'Non spécifié';
-
-        const webhookPayload = {
-          timestamp: new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Ouagadougou' }),
-          institution: institutionNom,
-          institution_id: category,
-          institution_contact: INSTITUTIONS[category as keyof typeof INSTITUTIONS]?.phone || 'N/A',
-          categorie: subcategory,
-          type_probleme: subcategory,
-
-          description: description || '',
-          nom: nomComplet,
-          prenoms: (profile as any).prenoms || '',
-          nom_famille: (profile as any).nom || '',
-          telephone: (profile as any).telephone || 'Non renseigné',
-          photo_profil: avatarSignedUrl,
-          avatarUrl: avatarSignedUrl,
-          gps: latitude && longitude ? `${latitude},${longitude}` : '0,0',
-          lieu: lieuTxt,
-          mapsUrl: lieuTxt,
-          photo_url: photoSignedUrl,
-          photoUrl: photoSignedUrl,
-          audio_url: audioSignedUrl,
-          audioUrl: audioSignedUrl,
-          statut: 'Nouveau',
-        };
-        fetch(WEBHOOK_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(webhookPayload),
-        }).catch((err) => console.warn('Webhook forward failed:', err));
-      } catch (whErr) {
-        console.warn('Webhook error:', whErr);
-      }
-
-      toast({
-        title: 'Signalement envoyé!',
-        description: 'Votre signalement a été transmis aux autorités compétentes.',
-      });
-
+      const r = await submitReport(draft);
+      toast(r.merged
+        ? { title: 'Problème déjà signalé', description: `Votre signalement a été regroupé. Signalé par ${r.count} personnes — vous serez notifié des changements.` }
+        : { title: 'Signalement envoyé !', description: 'Transmis aux autorités compétentes.' });
       navigate('/dashboard');
-    } catch (error) {
-      console.error('Submit error:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de l\'envoi du signalement',
-        variant: 'destructive',
-      });
+    } catch (err) {
+      console.error(err);
+      enqueueReport(draft); setPending(getQueue().length);
+      toast({ title: 'Envoi impossible', description: 'Sauvegardé localement, nouvel essai automatique.', variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
@@ -305,253 +198,149 @@ const NewReport: React.FC = () => {
   const selectedInstitution = category ? INSTITUTIONS[category as keyof typeof INSTITUTIONS] : null;
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>;
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <header className="gradient-hero text-primary-foreground shadow-lg sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="text-primary-foreground hover:bg-primary-foreground/10"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft size={20} />
-              </Button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-card overflow-hidden">
-                  <img src={logo} alt="Faso Propre" className="w-full h-full object-cover" />
-                </div>
-                <h1 className="text-lg font-bold">Nouveau signalement</h1>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-primary-foreground hover:bg-primary-foreground/10"
-              onClick={() => setShowOnboarding(true)}
-            >
-              <HelpCircle size={20} />
+    <div className="min-h-screen bg-background pb-24">
+      <header className="gradient-hero text-primary-foreground shadow-lg sticky top-0 z-20">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft size={20} />
             </Button>
+            <div className="w-8 h-8 rounded-full bg-card overflow-hidden"><img src={logo} alt="Faso Propre" className="w-full h-full object-cover" /></div>
+            <h1 className="text-lg font-bold">Nouveau signalement</h1>
           </div>
+          <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => setShowOnboarding(true)}>
+            <HelpCircle size={20} />
+          </Button>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6">
+        {(!online || pending > 0) && (
+          <div className="max-w-lg mx-auto mb-4 flex items-center gap-2 rounded-lg border border-status-pending bg-status-pending/10 p-3 text-sm">
+            <WifiOff size={16} />
+            {!online ? 'Hors-ligne : votre signalement sera sauvegardé et envoyé plus tard.' : `${pending} signalement(s) en attente d'envoi.`}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-6 max-w-lg mx-auto">
-          {/* Category Selection */}
-          <Card className="shadow-card animate-slide-up">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Type de problème</CardTitle>
-              <CardDescription>Sélectionnez la catégorie du signalement</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <Step n={1} title="Type de problème" desc="Catégorie et urgence" done={!!subcategory}>
+            <div className="space-y-2">
+              <Label>Catégorie *</Label>
+              <Select value={category} onValueChange={(v) => { setCategory(v); setSubcategory(''); }}>
+                <SelectTrigger className="bg-card"><SelectValue placeholder="Sélectionnez une catégorie" /></SelectTrigger>
+                <SelectContent className="bg-popover">
+                  {Object.entries(INSTITUTIONS).map(([key, inst]) => (
+                    <SelectItem key={key} value={key}>{inst.icon} {inst.nom}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedInstitution && (
               <div className="space-y-2">
-                <Label>Catégorie *</Label>
-                <Select value={category} onValueChange={(val) => {
-                  setCategory(val);
-                  setSubcategory('');
-                }}>
-                  <SelectTrigger className="bg-card">
-                    <SelectValue placeholder="Sélectionnez une catégorie" />
-                  </SelectTrigger>
+                <Label>Type de problème *</Label>
+                <Select value={subcategory} onValueChange={setSubcategory}>
+                  <SelectTrigger className="bg-card"><SelectValue placeholder="Précisez le type" /></SelectTrigger>
                   <SelectContent className="bg-popover">
-                    {Object.entries(INSTITUTIONS).map(([key, inst]) => (
-                      <SelectItem key={key} value={key}>
-                        {inst.icon} {inst.nom}
-                      </SelectItem>
-                    ))}
+                    {selectedInstitution.options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
+            )}
+            <div className="space-y-2">
+              <Label>Niveau d'urgence</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {URGENCES.map((u) => (
+                  <button key={u.value} type="button" onClick={() => setUrgence(u.value)}
+                    className={`rounded-lg border-2 px-3 py-2 text-sm font-medium transition ${urgence === u.value ? `${u.cls} bg-muted` : 'border-border text-muted-foreground'}`}>
+                    {u.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Step>
 
-              {selectedInstitution && (
-                <div className="space-y-2">
-                  <Label>Type de problème *</Label>
-                  <Select value={subcategory} onValueChange={setSubcategory}>
-                    <SelectTrigger className="bg-card">
-                      <SelectValue placeholder="Précisez le type" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {selectedInstitution.options.map((option) => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          <Step n={2} title="Localisation" desc="Détectez votre position puis ajustez le marqueur" done={latitude != null}>
+            <Button type="button" variant="outline" className="w-full" onClick={detectPosition} disabled={locating}>
+              {locating ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Crosshair className="mr-2" size={16} />}
+              {locating ? 'Détection en cours…' : 'Détecter ma position'}
+            </Button>
+            {latitude != null && longitude != null && (
+              <div className="flex items-center justify-between text-xs rounded-md bg-muted p-2">
+                <span className="flex items-center gap-1"><MapPin size={12} />{latitude.toFixed(6)}, {longitude.toFixed(6)}</span>
+                <span className="font-semibold">{accuracy != null ? `±${accuracy} m` : 'Ajusté manuellement'}</span>
+              </div>
+            )}
+            <ReportMap latitude={latitude} longitude={longitude} onMove={onMarkerMove} />
+            <p className="text-xs text-muted-foreground">Touchez la carte ou faites glisser le point pour corriger.</p>
+            <div className="space-y-2">
+              <Label>Adresse / Quartier</Label>
+              <Input value={adresse} onChange={(e) => setAdresse(e.target.value)} placeholder="Rempli automatiquement, modifiable" maxLength={300} />
+            </div>
+            <div className="space-y-2">
+              <Label>Repère visuel / Point de référence</Label>
+              <Input value={repere} onChange={(e) => setRepere(e.target.value)} placeholder="Ex : en face de la pharmacie X, près du poteau N°…" maxLength={200} />
+            </div>
+          </Step>
+
+          <Step n={3} title="Photos et description" desc="1 à 5 photos, texte ou message vocal" done={photos.length > 0}>
+            <div className="space-y-2">
+              <Label>Photos du problème * ({photos.length}/{MAX_PHOTOS})</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {photos.map((p, i) => (
+                  <div key={i} className="relative aspect-square">
+                    <img src={p} alt={`Photo ${i + 1}`} className="w-full h-full object-cover rounded-lg" />
+                    <button type="button" aria-label="Supprimer la photo" onClick={() => setPhotos((ps) => ps.filter((_, j) => j !== i))}
+                      className="absolute top-1 right-1 rounded-full bg-destructive text-destructive-foreground p-1"><X size={12} /></button>
+                  </div>
+                ))}
+                {photos.length < MAX_PHOTOS && (
+                  <button type="button" onClick={() => fileInputRef.current?.click()}
+                    className="aspect-square border-2 border-dashed border-primary/30 rounded-lg flex flex-col items-center justify-center text-primary/60 hover:border-primary/60">
+                    <Camera size={24} /><span className="text-[10px] mt-1">Ajouter</span>
+                  </button>
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handlePhotos} />
+              <p className="text-xs text-muted-foreground">Max 5 Mo par photo</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Description (optionnel)</Label>
+              <Textarea placeholder="Décrivez le problème…" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={500} />
+              <p className="text-xs text-muted-foreground text-right">{description.length}/500</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1"><Mic size={14} />Message vocal (optionnel, 30 s max)</Label>
+              {audioUrl ? (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                  <audio src={audioUrl} controls className="flex-1 h-8" />
+                  <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setAudioUrl(null)}><X size={16} /></Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1">
+                  <Button type="button" variant={isRecording ? 'destructive' : 'outline'} className={`h-16 w-16 rounded-full ${isRecording ? 'animate-pulse' : ''}`}
+                    onClick={isRecording ? stopRecording : startRecording}>
+                    {isRecording ? <Square size={24} /> : <Mic size={24} />}
+                  </Button>
+                  {isRecording && <p className="text-xs text-destructive font-medium">Enregistrement… {recSeconds}s / {MAX_AUDIO_SEC}s</p>}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </Step>
 
-          {/* GPS Position */}
-          <Card className="shadow-card animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Ma position actuelle</CardTitle>
-              <CardDescription>Capturez votre position GPS</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <GPSCapture
-                latitude={latitude}
-                longitude={longitude}
-                onCapture={handleGPSCapture}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Photo & Description */}
-          <Card className="shadow-card animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Documentation</CardTitle>
-              <CardDescription>Ajoutez une photo et des détails</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Photo Upload */}
-              <div className="space-y-2">
-                <Label>Photo du problème *</Label>
-                {photo ? (
-                  <div className="relative">
-                    <img 
-                      src={photo} 
-                      alt="Aperçu" 
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={() => {
-                        setPhoto(null);
-                        setPhotoFile(null);
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
-                ) : (
-                  <div
-                    className="border-2 border-dashed border-primary/30 rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Camera size={40} className="mx-auto text-primary/50 mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Touchez pour prendre ou choisir une photo
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Max 5 Mo • JPG, PNG
-                    </p>
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={handlePhotoCapture}
-                />
-              </div>
-
-              {/* Description */}
-              <div className="space-y-2">
-                <Label>Description (optionnel)</Label>
-                <Textarea
-                  placeholder="Décrivez le problème en détail..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  maxLength={500}
-                />
-                <p className="text-xs text-muted-foreground text-right">
-                  {description.length}/500
-                </p>
-              </div>
-
-              {/* Audio Recording */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1">
-                  <Mic size={14} />
-                  Message audio (optionnel)
-                </Label>
-                {audioUrl ? (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
-                    <audio src={audioUrl} controls className="flex-1 h-8" />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 text-destructive hover:text-destructive"
-                      onClick={() => {
-                        setAudioBlob(null);
-                        setAudioUrl(null);
-                      }}
-                    >
-                      <X size={16} />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant={isRecording ? 'destructive' : 'outline'}
-                      className={`h-16 w-16 rounded-full ${isRecording ? 'animate-pulse' : ''}`}
-                      onClick={isRecording ? stopRecording : startRecording}
-                    >
-                      {isRecording ? <Square size={24} /> : <Mic size={24} />}
-                    </Button>
-                  </div>
-                )}
-                {isRecording && (
-                  <p className="text-xs text-center text-destructive font-medium">
-                    🔴 Enregistrement en cours... Appuyez pour arrêter
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full bg-primary hover:bg-primary/90"
-            disabled={isSubmitting || !category || !subcategory || !photo}
-          >
-            {isSubmitting ? (
-              <span className="flex items-center gap-2">
-                <span className="animate-spin h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full" />
-                Envoi en cours...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <Send size={20} />
-                Envoyer le signalement
-              </span>
-            )}
+          <Button type="submit" size="lg" className="w-full" disabled={isSubmitting || !category || !subcategory || photos.length === 0}>
+            {isSubmitting ? <><Loader2 className="mr-2 animate-spin" size={18} />Envoi en cours…</> : <><Send className="mr-2" size={18} />{online ? 'Envoyer le signalement' : 'Sauvegarder hors-ligne'}</>}
           </Button>
+          <p className="text-xs text-center text-muted-foreground">La date et l'heure sont enregistrées automatiquement.</p>
         </form>
       </main>
 
       <BottomNavigation />
-
-      <OnboardingGuide 
-        open={showOnboarding} 
-        onOpenChange={(open) => {
-          setShowOnboarding(open);
-          if (!open) {
-            localStorage.setItem('faso_propre_onboarding_seen', 'true');
-          }
-        }} 
-      />
+      <OnboardingGuide open={showOnboarding} onOpenChange={(o) => { setShowOnboarding(o); if (!o) localStorage.setItem('faso_propre_onboarding_seen', 'true'); }} />
     </div>
   );
 };
