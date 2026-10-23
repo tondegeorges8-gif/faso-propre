@@ -1025,6 +1025,35 @@ export type Database = {
         }
         Relationships: []
       }
+      signalement_followers: {
+        Row: {
+          created_at: string
+          id: string
+          signalement_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          signalement_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          signalement_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signalement_followers_signalement_id_fkey"
+            columns: ["signalement_id"]
+            isOneToOne: false
+            referencedRelation: "signalements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signalement_status_history: {
         Row: {
           changed_by: string | null
@@ -1062,75 +1091,110 @@ export type Database = {
       }
       signalements: {
         Row: {
+          adresse: string | null
           arrondissement: string | null
           audio_url: string | null
+          audio_urls: string[]
           category: string
           commission_montant: number | null
           created_at: string
           description: string | null
+          gps_accuracy: number | null
           id: string
           latitude: number | null
           longitude: number | null
           montant_total: number | null
           nom_complet: string
+          parent_id: string | null
           photo_url: string | null
+          photos: string[]
           quartier: string | null
+          repere: string | null
+          reporters_count: number
           secteur: string | null
           sous_quartier: string | null
           status: string
           statut_paiement: string
           subcategory: string
+          submitted_at: string
           updated_at: string
+          urgence: string
           user_id: string
           ville: string
         }
         Insert: {
+          adresse?: string | null
           arrondissement?: string | null
           audio_url?: string | null
+          audio_urls?: string[]
           category: string
           commission_montant?: number | null
           created_at?: string
           description?: string | null
+          gps_accuracy?: number | null
           id?: string
           latitude?: number | null
           longitude?: number | null
           montant_total?: number | null
           nom_complet: string
+          parent_id?: string | null
           photo_url?: string | null
+          photos?: string[]
           quartier?: string | null
+          repere?: string | null
+          reporters_count?: number
           secteur?: string | null
           sous_quartier?: string | null
           status?: string
           statut_paiement?: string
           subcategory: string
+          submitted_at?: string
           updated_at?: string
+          urgence?: string
           user_id: string
           ville: string
         }
         Update: {
+          adresse?: string | null
           arrondissement?: string | null
           audio_url?: string | null
+          audio_urls?: string[]
           category?: string
           commission_montant?: number | null
           created_at?: string
           description?: string | null
+          gps_accuracy?: number | null
           id?: string
           latitude?: number | null
           longitude?: number | null
           montant_total?: number | null
           nom_complet?: string
+          parent_id?: string | null
           photo_url?: string | null
+          photos?: string[]
           quartier?: string | null
+          repere?: string | null
+          reporters_count?: number
           secteur?: string | null
           sous_quartier?: string | null
           status?: string
           statut_paiement?: string
           subcategory?: string
+          submitted_at?: string
           updated_at?: string
+          urgence?: string
           user_id?: string
           ville?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "signalements_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "signalements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sponsor_ads: {
         Row: {
@@ -1449,6 +1513,24 @@ export type Database = {
         Returns: boolean
       }
       is_founder: { Args: never; Returns: boolean }
+      submit_signalement: {
+        Args: {
+          _adresse: string
+          _audio_url: string
+          _category: string
+          _description: string
+          _gps_accuracy: number
+          _latitude: number
+          _longitude: number
+          _nom_complet: string
+          _photos: string[]
+          _repere: string
+          _subcategory: string
+          _submitted_at: string
+          _urgence: string
+        }
+        Returns: Json
+      }
       track_article_click: { Args: { _article_id: string }; Returns: undefined }
       track_article_view: { Args: { _article_id: string }; Returns: undefined }
       track_boutique_visit: {
