@@ -1411,6 +1411,10 @@ export type Database = {
         Args: { _action: string; _max_events: number; _window_seconds: number }
         Returns: boolean
       }
+      get_admin_registrations: {
+        Args: { _month?: string; _page?: number; _search?: string }
+        Returns: Json
+      }
       get_citizen_leaderboard: {
         Args: { _limit?: number }
         Returns: {
@@ -1512,6 +1516,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_app_admin: { Args: never; Returns: boolean }
       is_founder: { Args: never; Returns: boolean }
       submit_signalement: {
         Args: {
