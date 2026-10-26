@@ -35,6 +35,8 @@ import MaBoutique from "./pages/MaBoutique";
 import BoutiqueDetail from "./pages/BoutiqueDetail";
 
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
+import AdminGuard from "@/components/auth/AdminGuard";
 
 const queryClient = new QueryClient();
 
@@ -58,13 +60,14 @@ const App = () => (
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/collector" element={<CollectorDashboard />} />
-            <Route path="/founder" element={<FounderDashboard />} />
+            <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
+            <Route path="/founder" element={<AdminGuard><FounderDashboard /></AdminGuard>} />
             <Route path="/loyalty" element={<LoyaltyPage />} />
-            <Route path="/sponsors" element={<SponsorsAdmin />} />
+            <Route path="/sponsors" element={<AdminGuard><SponsorsAdmin /></AdminGuard>} />
             <Route path="/profile" element={<Profile />} />
             {FEATURE_AVAILABILITY.prestataires && <>
             <Route path="/prestataires" element={<Prestataires />} />
-            <Route path="/admin/prestataires" element={<PrestatairesAdmin />} />
+            <Route path="/admin/prestataires" element={<AdminGuard><PrestatairesAdmin /></AdminGuard>} />
             <Route path="/prestataires/fiche/:id" element={<PrestataireProfile />} />
             <Route path="/prestataires/:metier" element={<Prestataires />} />
             <Route path="/prestataire/inscription" element={<PrestataireSignup />} />

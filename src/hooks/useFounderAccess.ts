@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 
 export const useFounderAccess = () => {
   const { user } = useAuth();
+  const adminAccess = useAdminAccess();
   const [isFounder, setIsFounder] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,5 +42,5 @@ export const useFounderAccess = () => {
     checkFounderStatus();
   }, [user]);
 
-  return { isFounder, isLoading };
+  return { isFounder: isFounder && adminAccess.isAdmin, isLoading: isLoading || adminAccess.isLoading };
 };

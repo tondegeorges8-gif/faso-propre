@@ -8,6 +8,7 @@
  import UserProfile from '@/components/profile/UserProfile';
  import InstitutionDashboard from '@/components/profile/InstitutionDashboard';
  import FounderDashboard from '@/pages/FounderDashboard';
+ import { useAdminAccess } from '@/hooks/useAdminAccess';
  
  const logo = '/logo.png';
  
@@ -15,6 +16,7 @@
    const navigate = useNavigate();
    const { isAuthenticated, isLoading: authLoading, logout } = useAuth();
    const { isFounder, isInstitution, institution, isLoading: roleLoading } = useUserRole();
+   const { isAdmin } = useAdminAccess();
  
    // Redirect if not authenticated
    React.useEffect(() => {
@@ -37,7 +39,7 @@
    }
  
    // Founder sees the complete founder dashboard
-   if (isFounder) {
+   if (isFounder && isAdmin) {
      return <FounderDashboard />;
    }
  
@@ -78,6 +80,7 @@
        </header>
  
        <main className="container mx-auto px-4 py-6">
+         {isAdmin && <Button variant="outline" className="mb-6 w-full" onClick={() => navigate('/admin')}>Espace Admin</Button>}
          {isInstitution && institution ? (
            <InstitutionDashboard institutionId={institution} />
          ) : (
