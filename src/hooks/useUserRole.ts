@@ -1,6 +1,7 @@
  import { useState, useEffect } from 'react';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
+ import { useAdminAccess } from '@/hooks/useAdminAccess';
  
  export type AppRole = 'user' | 'collector' | 'admin' | 'founder' | 'prestataire';
  export type InstitutionId = 'ONEA' | 'SONABEL' | 'ONASER' | 'ANASUR' | 'LABO_NAT' | 'POLICE_MUN' | 'VOIRIE' | 'MAIRIE' | 'SANTE' | 'ARCEP' | 'MENAPLN';
@@ -18,6 +19,7 @@
  
  export const useUserRole = (): UserRoleData => {
    const { user } = useAuth();
+   const adminAccess = useAdminAccess();
    const [role, setRole] = useState<AppRole>('user');
    const [institution, setInstitution] = useState<InstitutionId | null>(null);
    const [isLoading, setIsLoading] = useState(true);
@@ -53,11 +55,11 @@
    return {
      role,
      institution,
-     isLoading,
-     isFounder: role === 'founder',
+    isLoading: isLoading || adminAccess.isLoading,
+    isFounder: role === 'founder' && adminAccess.isAdmin,
      isInstitution: !!institution,
      isCollector: role === 'collector',
-    isAdmin: role === 'admin',
+    isAdmin: role === 'admin' && adminAccess.isAdmin,
     isPrestataire: role === 'prestataire',
    };
  };
