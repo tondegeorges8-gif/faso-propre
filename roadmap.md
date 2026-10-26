@@ -1,5 +1,10 @@
 # Roadmap
 
+## Administration privée
+- [ ] Masquer et protéger les accès Admin pour tous sauf le compte autorisé, avec contrôle serveur.
+- [ ] Afficher tous les inscrits, compteur, filtre mensuel et recherche.
+- [ ] Vérifier les autorisations et le parcours administrateur.
+
 ## En cours
 - [x] Créer src/config/appConfig.ts (chemins alignés sur les routes réelles)
 - [x] Bouton « Voir ma boutique » dans Faso Yaar pour les marchands
