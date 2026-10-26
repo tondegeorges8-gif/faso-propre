@@ -309,6 +309,7 @@ const FounderDashboard: React.FC = () => {
         </Card>
 
         {/* Quick Admin Links */}
+        <Button variant="outline" className="w-full" onClick={() => navigate('/admin')}><Users size={20} className="mr-2" />Espace Admin — Utilisateurs inscrits</Button>
         <div className="grid grid-cols-2 gap-4">
           <Button
             variant="outline"

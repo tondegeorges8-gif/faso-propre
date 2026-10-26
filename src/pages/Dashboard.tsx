@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { INSTITUTIONS, REPORT_STATUSES } from '@/data/institutions';
 import { useFounderAccess } from '@/hooks/useFounderAccess';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { supabase } from '@/integrations/supabase/client';
 
 import SponsorBanner from '@/components/sponsors/SponsorBanner';
@@ -46,6 +47,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, logout, isAuthenticated, isLoading } = useAuth();
   const { isFounder } = useFounderAccess();
+  const { isAdmin } = useAdminAccess();
   const [userSignalements, setUserSignalements] = useState<Signalement[]>([]);
   const [loadingSignalements, setLoadingSignalements] = useState(true);
 
@@ -280,6 +282,7 @@ const Dashboard: React.FC = () => {
         {/* Sponsor Banner */}
         <SponsorBanner variant="inline" />
 
+        {isAdmin && <Button variant="outline" className="w-full" onClick={() => navigate('/admin')}><Crown size={20} className="mr-2" />Espace Admin</Button>}
         {/* Founder Access - Only visible to founders */}
         {isFounder && (
           <Card className="shadow-card border-primary/50">
