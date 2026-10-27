@@ -7,7 +7,7 @@ export const useAdminAccess = () => {
   const { user, isLoading } = useAuth();
   const eligible = hasAdminEmail(user?.email);
   const access = useQuery({
-    queryKey: ['admin-access', user?.id],
+    queryKey: ['admin-access', user?.id, user?.email],
     enabled: eligible && !isLoading,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('is_app_admin');
@@ -18,7 +18,7 @@ export const useAdminAccess = () => {
     staleTime: 0,
   });
   return {
-    isAdmin: eligible && access.data === true && !access.isError,
-    isLoading: isLoading || (eligible && access.isPending),
+    isAdmin: !isLoading && eligible && access.data === true && !access.isError && !access.isFetching,
+    isLoading: isLoading || (eligible && (access.isPending || access.isFetching)),
   };
 };
