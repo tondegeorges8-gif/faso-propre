@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Administration privée
-- [ ] Masquer et protéger les accès Admin pour tous sauf le compte autorisé, avec contrôle serveur.
+- [x] Masquer et protéger les accès Admin pour tous sauf le compte autorisé, avec contrôle serveur.
 - [ ] Afficher tous les inscrits, compteur, filtre mensuel et recherche.
-- [ ] Vérifier les autorisations et le parcours administrateur.
+- [x] Vérifier les autorisations et le parcours d’accès administrateur (11 tests, redirection sans connexion, accès du propriétaire dans l’aperçu).
 
 ## En cours
 - [x] Créer src/config/appConfig.ts (chemins alignés sur les routes réelles)
