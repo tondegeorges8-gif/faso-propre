@@ -37,7 +37,7 @@ describe('Admin identity and direct route protection', () => {
     state.rpc.mockReset();
   });
 
-  it.each([null, 'citoyen@example.com', 'Tondegeorges8@gmail.com', 'tondegeorges8@gmail.com '])(
+  it.each([null, 'citoyen@example.com', 'tondegeorges8@gmail.com', 'Luxeeternel98@gmail.com', 'luxeeternel98@gmail.com '])(
     'redirects unauthorized identity %s to home without requesting Admin data', async (email) => {
       state.auth.user = email === null ? null : { id: 'citizen', email };
       mount();
@@ -49,7 +49,7 @@ describe('Admin identity and direct route protection', () => {
   );
 
   it('allows the exact owner email only after server approval', async () => {
-    state.auth.user = { id: 'owner', email: 'tondegeorges8@gmail.com' };
+    state.auth.user = { id: 'owner', email: 'luxeeternel98@gmail.com' };
     state.rpc.mockResolvedValue({ data: true, error: null });
     mount();
     await waitFor(() => expect(screen.getByTestId('private')).toBeInTheDocument());
@@ -59,7 +59,7 @@ describe('Admin identity and direct route protection', () => {
 
   it.each([{ data: false, error: null }, { data: null, error: new Error('denied') }])(
     'rejects the owner email when server validation fails: %s', async (result) => {
-      state.auth.user = { id: 'owner', email: 'tondegeorges8@gmail.com' };
+      state.auth.user = { id: 'owner', email: 'luxeeternel98@gmail.com' };
       state.rpc.mockResolvedValue(result);
       mount();
       await waitFor(() => expect(screen.getByTestId('home')).toBeInTheDocument());
@@ -68,9 +68,9 @@ describe('Admin identity and direct route protection', () => {
   );
 
   it('hides cached approval until the current identity is revalidated', async () => {
-    state.auth.user = { id: 'owner', email: 'tondegeorges8@gmail.com' };
+    state.auth.user = { id: 'owner', email: 'luxeeternel98@gmail.com' };
     const client = new QueryClient();
-    client.setQueryData(['admin-access', 'owner', 'tondegeorges8@gmail.com'], true);
+    client.setQueryData(['admin-access', 'owner', 'luxeeternel98@gmail.com'], true);
     let finish: ((value: { data: boolean; error: null }) => void) | undefined;
     state.rpc.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
     mount(client);

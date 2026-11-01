@@ -15,6 +15,13 @@
       "when": 1793053045024,
       "tag": "0001_private_admin_directory",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793521050118,
+      "tag": "0002_update_private_admin_identity",
+      "breakpoints": true
     }
   ]
 }

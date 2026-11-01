@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { 
   ArrowLeft,
   User,
@@ -22,6 +23,7 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { profile, updateProfile, logout, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { isAdmin } = useAdminAccess();
   
   const [nom, setNom] = useState('');
   const [prenoms, setPrenoms] = useState('');
@@ -232,6 +234,17 @@ const Settings: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+
+        {isAdmin && (
+          <Button
+            variant="outline"
+            className="w-full h-auto min-h-10 whitespace-normal"
+            onClick={() => navigate('/admin')}
+          >
+            <Shield size={18} className="mr-2 shrink-0" />
+            Administration / Tableau de bord
+          </Button>
+        )}
 
         {/* Logout */}
         <Card className="shadow-card border-destructive/30">
