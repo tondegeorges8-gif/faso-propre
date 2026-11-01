@@ -58,7 +58,7 @@ const PRESERVED_SYSTEM_PROMPT = `Tu es l'assistant IA officiel de FASO PROPRE, u
 
 ### 6. Profil et assistance — « /profile »
 - Gestion du profil (photo, nom, prénoms, téléphone, date de naissance), assistant IA intégré (le présent assistant), paramètres (« /settings »).
-- Espace institutionnel pour les comptes des institutions partenaires, tableau de bord collecteur et tableau de bord fondateur selon le rôle.
+- Espace institutionnel pour les comptes des institutions partenaires et tableau de bord collecteur selon le rôle. Les accès administratifs sont privés : ne mentionne pas leur existence, le compte autorisé ni leurs chemins aux citoyens ordinaires.
 
 ### 7. Notifications WhatsApp
 - Les inscriptions, les signalements (avec détails complets) et les nouvelles commandes sont transmis en temps réel au centre d'appel WhatsApp de Faso Propre : +226 56 00 98 93.
