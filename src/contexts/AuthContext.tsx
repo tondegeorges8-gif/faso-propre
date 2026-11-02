@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { sendWebhook } from '@/lib/webhook';
@@ -53,6 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const currentUserId = useRef<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -61,17 +62,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (data && !error) {
+    if (data && !error && currentUserId.current === userId) {
       setProfile(data as Profile);
     }
   };
 
   useEffect(() => {
+    let active = true;
+    let authEventReceived = false;
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!active) return;
+        authEventReceived = true;
+        currentUserId.current = session?.user.id ?? null;
+        setProfile(null);
         setSession(session);
         setUser(session?.user ?? null);
+        setIsLoading(false);
         
         // Defer profile fetching with setTimeout to avoid deadlocks
         if (session?.user) {
@@ -86,6 +94,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active || authEventReceived) return;
+      currentUserId.current = session?.user.id ?? null;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -94,7 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => { active = false; currentUserId.current = null; subscription.unsubscribe(); };
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
@@ -202,7 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     <AuthContext.Provider value={{
       user,
       session,
-      profile,
+      profile: profile?.user_id === user?.id ? profile : null,
       isAuthenticated: !!user,
       isLoading,
       login,
