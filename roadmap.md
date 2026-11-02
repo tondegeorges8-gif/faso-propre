@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Administration privée
-- [ ] Séparer le bouton Paramètres (luxeeternel98@gmail.com) et la connexion sécurisée Admin (tondegeorges8@gmail.com).
+- [ ] Séparer le bouton Paramètres (luxeeternel98@gmail.com) et la connexion sécurisée Admin (tondegeorges8@gmail.com), avec mot de passe obligatoire et redirection des autres identités.
 - [ ] Vérifier visuellement l’accès avec luxeeternel98@gmail.com — autorisation de session refusée.
 - [x] Masquer et protéger les accès Admin pour tous sauf le compte autorisé, avec contrôle serveur.
 - [ ] Afficher tous les inscrits, compteur, filtre mensuel et recherche.
