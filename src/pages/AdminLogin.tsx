@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminEntryAccess } from '@/hooks/useAdminEntryAccess';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
-import { ADMIN_EMAIL, hasAdminEmail } from '@/lib/adminAccess';
+import { hasAdminEmail } from '@/lib/adminAccess';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
