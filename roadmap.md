@@ -1,10 +1,10 @@
 # Roadmap
 
 ## Administration privée
-- [ ] Séparer le bouton Paramètres (luxeeternel98@gmail.com) et la connexion sécurisée Admin (tondegeorges8@gmail.com).
-- [ ] Vérifier visuellement l’accès avec luxeeternel98@gmail.com — autorisation de session refusée.
+- [x] Séparer le bouton Paramètres (luxeeternel98@gmail.com) et la connexion sécurisée Admin (tondegeorges8@gmail.com), avec mot de passe obligatoire et redirection des autres identités (22 tests réussis).
+- [ ] Vérifier le parcours complet depuis luxeeternel98@gmail.com avec connexion par mot de passe — session de ce compte non autorisée précédemment, identifiants non disponibles.
 - [x] Masquer et protéger les accès Admin pour tous sauf le compte autorisé, avec contrôle serveur.
-- [ ] Afficher tous les inscrits, compteur, filtre mensuel et recherche.
+- [x] Afficher tous les inscrits, compteur, filtre mensuel, recherche et date d’inscription ; tableau réel, recherche vide et filtre mensuel vérifiés avec le compte Admin.
 - [x] Vérifier les autorisations et le parcours d’accès administrateur (11 tests, redirection sans connexion, accès du propriétaire dans l’aperçu).
 
 ## En cours

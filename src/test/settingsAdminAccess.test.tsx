@@ -28,7 +28,7 @@ function mount() {
         <Routes>
           <Route path="/settings" element={<Settings />} />
           <Route path="/auth" element={<div data-testid="auth" />} />
-          <Route path="/admin" element={<div data-testid="admin-destination" />} />
+          <Route path="/admin/connexion" element={<div data-testid="admin-destination" />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -61,7 +61,7 @@ describe('Private Settings administration access', () => {
     state.rpc.mockResolvedValue({ data: false, error: null });
     mount();
     expect(screen.queryByRole('button', { name: /Administration/ })).not.toBeInTheDocument();
-    await waitFor(() => expect(state.rpc).toHaveBeenCalledWith('is_app_admin'));
+    await waitFor(() => expect(state.rpc).toHaveBeenCalledWith('is_admin_entry_account'));
     expect(screen.queryByRole('button', { name: /Administration/ })).not.toBeInTheDocument();
   });
 });

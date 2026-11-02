@@ -1516,6 +1516,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_entry_account: { Args: never; Returns: boolean }
       is_app_admin: { Args: never; Returns: boolean }
       is_founder: { Args: never; Returns: boolean }
       submit_signalement: {

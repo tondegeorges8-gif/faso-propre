@@ -22,6 +22,13 @@
       "when": 1793521050118,
       "tag": "0002_update_private_admin_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793610832708,
+      "tag": "0003_separate_admin_entry_and_authorization",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 # Project Architecture Rules
 
 - Admin navigation and routes use a shared server-validated access hook and guard that withhold cached approval during identity revalidation; the registration directory uses an authenticated security-definer RPC checked against the current Auth identity, never editable profile data. This keeps presentation restrictions backed by current server authorization.
+- The Settings invitation has separate server-validated eligibility from administrator authorization; its dedicated credential page signs into the admin identity and clears query caches before switching accounts. An invitation never grants access to registration data.
 - The registration directory pages over Auth users with a left join to profiles so accounts without profiles are included; city comes from the latest report or existing signup metadata and stays unknown when unavailable.
 
 - Reuse `PaymentOperators` for every Orange Money, Moov Africa, or Wave selector so payment choices stay consistent across transactional screens.
