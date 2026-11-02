@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
+import { useAdminEntryAccess } from '@/hooks/useAdminEntryAccess';
 import { 
   ArrowLeft,
   User,
@@ -23,7 +23,7 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { profile, updateProfile, logout, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
-  const { isAdmin } = useAdminAccess();
+  const { canEnter } = useAdminEntryAccess();
   
   const [nom, setNom] = useState('');
   const [prenoms, setPrenoms] = useState('');
@@ -235,11 +235,11 @@ const Settings: React.FC = () => {
           </CardContent>
         </Card>
 
-        {isAdmin && (
+        {canEnter && (
           <Button
             variant="outline"
             className="w-full h-auto min-h-10 whitespace-normal"
-            onClick={() => navigate('/admin')}
+            onClick={() => navigate('/admin/connexion')}
           >
             <Shield size={18} className="mr-2 shrink-0" />
             Administration / Tableau de bord
