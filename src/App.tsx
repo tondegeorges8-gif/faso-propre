@@ -36,6 +36,7 @@ import BoutiqueDetail from "./pages/BoutiqueDetail";
 
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import AdminLogin from "./pages/AdminLogin";
 import AdminGuard from "@/components/auth/AdminGuard";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/collector" element={<CollectorDashboard />} />
             <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
+            <Route path="/admin/connexion" element={<AdminLogin />} />
             <Route path="/founder" element={<AdminGuard><FounderDashboard /></AdminGuard>} />
             <Route path="/loyalty" element={<LoyaltyPage />} />
             <Route path="/sponsors" element={<AdminGuard><SponsorsAdmin /></AdminGuard>} />
