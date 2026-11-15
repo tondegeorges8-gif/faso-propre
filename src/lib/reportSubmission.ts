@@ -66,11 +66,6 @@ export async function submitReport(d: ReportDraft): Promise<SubmitResult> {
 
   // Transfert WhatsApp (fire & forget)
   try {
-    const ONE_YEAR = 60 * 60 * 24 * 365;
-    const signed = async (bucket: string, p: string) =>
-      (await supabase.storage.from(bucket).createSignedUrl(p, ONE_YEAR)).data?.signedUrl || '';
-    const photoUrl = await signed('signalements-photos', photoPaths[0]);
-    const audioUrl = audioPath ? await signed('signalements-audio', audioPath) : '';
     const inst = INSTITUTIONS[d.category as keyof typeof INSTITUTIONS];
     const lieu = d.latitude && d.longitude ? `https://www.google.com/maps?q=${d.latitude},${d.longitude}` : 'Non spécifié';
     fetch(WEBHOOK_URL, {
@@ -83,7 +78,6 @@ export async function submitReport(d: ReportDraft): Promise<SubmitResult> {
         description: d.description, nom: d.nomComplet, telephone: d.telephone || 'Non renseigné',
         gps: d.latitude && d.longitude ? `${d.latitude},${d.longitude}` : '0,0',
         lieu, mapsUrl: lieu, adresse: d.adresse, repere: d.repere, urgence: d.urgence,
-        photo_url: photoUrl, photoUrl, audio_url: audioUrl, audioUrl,
         regroupe: result.merged, signale_par: result.count, statut: 'Nouveau',
       }),
     }).catch(() => {});

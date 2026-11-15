@@ -1,5 +1,8 @@
 # Project Architecture Rules
 
+- Private application data uses authenticated owner/participant RLS and private storage folders; reporting merges only within one owner, while admin registration access stays behind its checked RPC, so helpers cannot bypass account isolation.
+- Private media is downloaded with the authenticated Storage API into revocable local object URLs, never new bearer download links, so viewing files requires the owner's session.
+
 - Admin navigation and routes use a shared server-validated access hook and guard that withhold cached approval during identity revalidation; the registration directory uses an authenticated security-definer RPC checked against the current Auth identity, never editable profile data. This keeps presentation restrictions backed by current server authorization.
 - The Settings invitation has separate server-validated eligibility from administrator authorization; its dedicated credential page signs into the admin identity and clears query caches before switching accounts. An invitation never grants access to registration data.
 - The registration directory pages over Auth users with a left join to profiles so accounts without profiles are included; city comes from the latest report or existing signup metadata and stays unknown when unavailable.
