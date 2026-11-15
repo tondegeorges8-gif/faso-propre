@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-const SIGNED_URL_EXPIRY = 60 * 60; // 1 hour
+import { privateStoragePath } from '@/lib/privateStorage';
 
 /**
- * Resolves a storage path or existing signed URL to a fresh short-lived signed URL.
- * If the value is already a full URL (legacy signed URL), it returns it as-is.
- * If it's a plain path, it generates a new signed URL on-demand.
+ * Downloads private media with the current session, including legacy storage URLs.
+ * The historical hook name is retained for callers; no bearer URL is created.
  */
 export function useSignedUrl(
   bucket: string,
@@ -15,29 +13,22 @@ export function useSignedUrl(
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!path) {
-      setUrl(null);
-      return;
-    }
-
-    // If it's already a full URL (legacy data), use it directly
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      setUrl(path);
-      return;
-    }
-
-    // Generate a short-lived signed URL from the storage path
+    setUrl(null);
+    const storagePath = privateStoragePath(bucket, path);
+    if (!storagePath) return;
     let cancelled = false;
+    let objectUrl: string | null = null;
     supabase.storage
       .from(bucket)
-      .createSignedUrl(path, SIGNED_URL_EXPIRY)
-      .then(({ data, error }) => {
-        if (!cancelled && data?.signedUrl) {
-          setUrl(data.signedUrl);
+      .download(storagePath)
+      .then(({ data }) => {
+        if (!cancelled && data) {
+          objectUrl = URL.createObjectURL(data);
+          setUrl(objectUrl);
         }
       });
 
-    return () => { cancelled = true; };
+    return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [bucket, path]);
 
   return url;
@@ -53,36 +44,21 @@ export function useSignedUrls(
   const [urls, setUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const validPaths = paths.filter((p): p is string => !!p && !p.startsWith('http'));
-    const legacyUrls: Record<string, string> = {};
-    
-    paths.forEach(p => {
-      if (p && (p.startsWith('http://') || p.startsWith('https://'))) {
-        legacyUrls[p] = p;
-      }
-    });
-
-    if (validPaths.length === 0) {
-      setUrls(legacyUrls);
-      return;
-    }
-
+    setUrls({});
     let cancelled = false;
-    supabase.storage
-      .from(bucket)
-      .createSignedUrls(validPaths, SIGNED_URL_EXPIRY)
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        const result: Record<string, string> = { ...legacyUrls };
-        data?.forEach(item => {
-          if (item.signedUrl && item.path) {
-            result[item.path] = item.signedUrl;
-          }
-        });
-        setUrls(result);
-      });
-
-    return () => { cancelled = true; };
+    const created: string[] = [];
+    Promise.all(paths.map(async original => {
+      const storagePath = privateStoragePath(bucket, original);
+      if (!original || !storagePath) return null;
+      const { data } = await supabase.storage.from(bucket).download(storagePath);
+      if (cancelled || !data) return null;
+      const objectUrl = URL.createObjectURL(data);
+      created.push(objectUrl);
+      return [original, objectUrl] as const;
+    })).then(entries => {
+      if (!cancelled) setUrls(Object.fromEntries(entries.filter((entry): entry is readonly [string, string] => entry !== null)));
+    });
+    return () => { cancelled = true; created.forEach(url => URL.revokeObjectURL(url)); };
   }, [bucket, JSON.stringify(paths)]);
 
   return urls;
