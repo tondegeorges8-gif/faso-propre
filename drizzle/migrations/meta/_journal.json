@@ -29,6 +29,13 @@
       "when": 1793610832708,
       "tag": "0003_separate_admin_entry_and_authorization",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794744574806,
+      "tag": "0004_private_owner_data_and_storage",
+      "breakpoints": true
     }
   ]
 }
