@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Confidentialité des données et fichiers
-- [ ] Supprimer les accès universels, limiter les données et fichiers aux propriétaires authentifiés et vérifier les accès directs et indirects.
+- [x] Supprimer les accès universels, limiter les données et fichiers aux propriétaires authentifiés et vérifier les accès directs et indirects (12 tests réels réussis, profil connecté vérifié, aucun droit anonyme ni règle publique).
 
 ## Administration privée
 - [x] Séparer le bouton Paramètres (luxeeternel98@gmail.com) et la connexion sécurisée Admin (tondegeorges8@gmail.com), avec mot de passe obligatoire et redirection des autres identités (22 tests réussis).

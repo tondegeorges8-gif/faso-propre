@@ -1,9 +1,10 @@
 // @vitest-environment node
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { afterAll, describe, expect, it } from 'vitest';
 
-const sessionFile = process.env.PRIVACY_SESSION_FILE;
+const requestedSessionFile = process.env.PRIVACY_SESSION_FILE;
+const sessionFile = requestedSessionFile && existsSync(requestedSessionFile) ? requestedSessionFile : undefined;
 describe.skipIf(!sessionFile)('Live authenticated owner isolation', () => {
   const env = Object.fromEntries(readFileSync('.env', 'utf8').split('\n').filter(line => line.includes('=')).map(line => {
     const separator = line.indexOf('=');
